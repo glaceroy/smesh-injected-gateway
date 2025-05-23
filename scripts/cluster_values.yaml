@@ -11,7 +11,6 @@ project:
     requests:
       cpu: 150m
       memory: 150Mi
-    injected_egress: 'true'
   ingress:
     id: "001"
     enabled: true
@@ -22,7 +21,6 @@ project:
     requests:
       cpu: 150m
       memory: 150Mi
-    injected_ingress: 'true'
   labels:
     snow: IT.OCP.CLOUD.LAB
     cmdb_appid: AL12345
@@ -31,7 +29,7 @@ project:
       enabled: true
       managed_by: openshift-gitops
     ad_group:
-      enabled: true
+      enabled: True
       name: GG_OCP_CLOUD_LAB_GROUP
       view: GG_OCP_CLOUD_LAB
     portworx:
@@ -81,7 +79,7 @@ project:
       enabled: true
       managed_by: openshift-gitops
     ad_group:
-      enabled: true
+      enabled: True
       name: GG_OCP_CLOUD_LAB_GROUP
       view: GG_OCP_CLOUD_LAB
     portworx:
@@ -131,7 +129,7 @@ project:
       enabled: true
       managed_by: openshift-gitops
     ad_group:
-      enabled: true
+      enabled: True
       name: GG_OCP_CLOUD_LAB_GROUP
       view: GG_OCP_CLOUD_LAB
     portworx:
@@ -181,7 +179,7 @@ project:
       enabled: true
       managed_by: openshift-gitops
     ad_group:
-      enabled: true
+      enabled: True
       name: GG_OCP_CLOUD_LAB_GROUP
       view: GG_OCP_CLOUD_LAB
     portworx:

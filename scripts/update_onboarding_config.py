@@ -25,15 +25,16 @@ def main():
         with open("cluster_values.yaml", 'r') as c_stream:
             cluster_val_loaded = yaml.load(c_stream)
 
-        for namespace in cluster_val_loaded['project']:
+        for ns_index, namespace in enumerate(cluster_val_loaded['project']):
             if val == namespace['namespace']:
                 for index, item in enumerate(namespace):
                     if item == "egress":
-                        cluster_val_loaded['project'][0]['egress']['injected_egress'] = 'true'
+                        cluster_val_loaded['project'][ns_index]['egress']['injected_egress'] = 'true'
 
                     elif item == "ingress":
-                        cluster_val_loaded['project'][0]['ingress']['injected_ingress'] = 'true'
+                        cluster_val_loaded['project'][ns_index]['ingress']['injected_ingress'] = 'true'
 
+                
                 with open("cluster_values.yaml", 'w') as igw_file:
                     yaml.dump(cluster_val_loaded, igw_file)
 
