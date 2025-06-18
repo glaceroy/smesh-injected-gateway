@@ -4,6 +4,7 @@ Filename      : update_gateway_replicas.py
 Author        : Aiyaz Khan
 Maintained by : Kyndryl Engineering
 Version       : 1.0
+Description   : This script updates the number of replicas for injected gateways based on the servicemesh control plane gateway replicas.
 """
 
 import logging as log
