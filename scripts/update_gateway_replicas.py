@@ -13,15 +13,15 @@ import sys
 import yaml
 
 
-logger = log.getLogger("")
-logger.setLevel(log.DEBUG)
+log = log.getlog("")
+log.setLevel(log.DEBUG)
 sh = log.StreamHandler(sys.stdout)
 formatter = log.Formatter(
     "[%(asctime)s] %(levelname)s : %(message)s",
     datefmt="%a, %d %b %Y %H:%M:%S",
 )
 sh.setFormatter(formatter)
-logger.addHandler(sh)
+log.addHandler(sh)
 
 def set_expected_replicas(namespace, replicas, gateway_type):
     """
@@ -44,12 +44,12 @@ def set_expected_replicas(namespace, replicas, gateway_type):
         text=True,
     )
     if output.returncode != 0:
-        logger.error(
+        log.error(
             f"Failed to scale deployment in namespace {namespace}: {output.stderr}"
         )
         sys.exit(1)
     
-    logger.info(
+    log.info(
         f"Scaled deployment in namespace {namespace} to {expected_replicas} replicas"
     ) 
 
@@ -73,18 +73,18 @@ def get_current_replicas(namespace, gateway_id):
         text=True,
     )
     if output.returncode != 0:
-        logger.error(
+        log.error(
             f"Failed to get replicas for gateway {gateway_id} in namespace {namespace}: {output.stderr}"
         )
         sys.exit(1)
     try:
         current_replicas = int(output.stdout.strip())
     except ValueError:
-        logger.error(
+        log.error(
             f"Failed to parse replicas for gateway {gateway_id} in namespace {namespace}: {output.stdout}"
         )
         sys.exit(1)
-    logger.info(
+    log.info(
         f"Current replicas for gateway {gateway_id} in namespace {namespace}: {current_replicas}"
     )
     return current_replicas 
@@ -125,11 +125,11 @@ def main():
                     text=True,
                 )
                 if output.returncode != 0:
-                    logger.error(
+                    log.error(
                         f"Namespace {namespace} does not exist. Skipping gateway {gateway_id}."
                     )
                     continue
-                logger.info(f"Namespace {namespace} exists. Proceeding with gateway {gateway_id}.")
+                log.info(f"Namespace {namespace} exists. Proceeding with gateway {gateway_id}.")
                 # Check if the gateway deployment exists
                 output = subprocess.run(
                     ["oc", "get", "deployment", gateway_id, "-n", namespace],
@@ -137,25 +137,25 @@ def main():
                     text=True,
                 )
                 if output.returncode != 0:
-                    logger.error(
+                    log.error(
                         f"Deployment {gateway_id} does not exist in namespace {namespace}. Skipping."
                     )
                     continue
-                logger.info(f"Deployment {gateway_id} exists in namespace {namespace}. Proceeding with scaling.")
+                log.info(f"Deployment {gateway_id} exists in namespace {namespace}. Proceeding with scaling.")
                 # Get the current replicas for the gateway
                 log.info(f"Getting current replicas for gateway {gateway_id} in namespace {namespace}")
                 # Check if the gateway type is valid
                 if gateway_type not in ["additionalEgress", "additionalIngress"]:
-                    logger.error(f"Invalid gateway type: {gateway_type}. Skipping gateway {gateway_id}.")
+                    log.error(f"Invalid gateway type: {gateway_type}. Skipping gateway {gateway_id}.")
                     continue
-                logger.info(f"Valid gateway type: {gateway_type}. Proceeding with scaling.")
+                log.info(f"Valid gateway type: {gateway_type}. Proceeding with scaling.")
                 # Get the current replicas for the gateway
                 log.info(f"Getting current replicas for gateway {gateway_id} in namespace {namespace}")
                 # Check if the gateway ID is valid
                 if not gateway_id:
-                    logger.error(f"Invalid gateway ID: {gateway_id}. Skipping.")
+                    log.error(f"Invalid gateway ID: {gateway_id}. Skipping.")
                     continue
-                logger.info(f"Valid gateway ID: {gateway_id}. Proceeding with scaling.")
+                log.info(f"Valid gateway ID: {gateway_id}. Proceeding with scaling.")
 
                 # Get current replicas
                 current_replicas = get_current_replicas(namespace, gateway_id)
