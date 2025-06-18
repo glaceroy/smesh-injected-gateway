@@ -89,6 +89,38 @@ def get_current_replicas(namespace, gateway_id):
     )
     return current_replicas 
 
+def check_namespace_exists(namespace):
+    """
+    Check if a namespace exists.
+    """
+    log.info(f"Checking if namespace {namespace} exists")
+    output = subprocess.run(
+        ["oc", "get", "namespace", namespace],
+        capture_output=True,
+        text=True,
+    )
+    if output.returncode != 0:
+        log.error(f"Namespace {namespace} does not exist.")
+        return False
+    log.info(f"Namespace {namespace} exists.")
+    return True
+
+def check_deployment_exists(namespace, gateway_id):
+    """
+    Check if a deployment exists in a given namespace.
+    """
+    log.info(f"Checking if deployment {gateway_id} exists in namespace {namespace}")
+    output = subprocess.run(
+        ["oc", "get", "deployment", gateway_id, "-n", namespace],
+        capture_output=True,
+        text=True,
+    )
+    if output.returncode != 0:
+        log.error(f"Deployment {gateway_id} does not exist in namespace {namespace}.")
+        return False
+    log.info(f"Deployment {gateway_id} exists in namespace {namespace}.")
+    return True
+
 def main():
 
     output = subprocess.run(
@@ -117,45 +149,6 @@ def main():
                     gateway = "ingress"
                 else:
                     gateway = "egress"
-                log.info(f"Processing {gateway_type} gateway {gateway_id} in namespace {namespace}")
-                # Check if the namespace exists
-                output = subprocess.run(
-                    ["oc", "get", "namespace", namespace],
-                    capture_output=True,
-                    text=True,
-                )
-                if output.returncode != 0:
-                    log.error(
-                        f"Namespace {namespace} does not exist. Skipping gateway {gateway_id}."
-                    )
-                    continue
-                log.info(f"Namespace {namespace} exists. Proceeding with gateway {gateway_id}.")
-                # Check if the gateway deployment exists
-                output = subprocess.run(
-                    ["oc", "get", "deployment", gateway_id, "-n", namespace],
-                    capture_output=True,
-                    text=True,
-                )
-                if output.returncode != 0:
-                    log.error(
-                        f"Deployment {gateway_id} does not exist in namespace {namespace}. Skipping."
-                    )
-                    continue
-                log.info(f"Deployment {gateway_id} exists in namespace {namespace}. Proceeding with scaling.")
-                # Get the current replicas for the gateway
-                log.info(f"Getting current replicas for gateway {gateway_id} in namespace {namespace}")
-                # Check if the gateway type is valid
-                if gateway_type not in ["additionalEgress", "additionalIngress"]:
-                    log.error(f"Invalid gateway type: {gateway_type}. Skipping gateway {gateway_id}.")
-                    continue
-                log.info(f"Valid gateway type: {gateway_type}. Proceeding with scaling.")
-                # Get the current replicas for the gateway
-                log.info(f"Getting current replicas for gateway {gateway_id} in namespace {namespace}")
-                # Check if the gateway ID is valid
-                if not gateway_id:
-                    log.error(f"Invalid gateway ID: {gateway_id}. Skipping.")
-                    continue
-                log.info(f"Valid gateway ID: {gateway_id}. Proceeding with scaling.")
 
                 # Get current replicas
                 current_replicas = get_current_replicas(namespace, gateway_id)
