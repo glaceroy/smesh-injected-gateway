@@ -34,7 +34,7 @@ def set_expected_replicas(namespace, replicas, gateway):
             "oc",
             "scale",
             "deployment",
-            "injected-gateway-" + gateway,
+            gateway,
             "--replicas",
             str(replicas),
             "-n",
@@ -111,6 +111,7 @@ def check_deployment_exists(namespace, gateway_id):
     log.info(f"Deployment {gateway_id} exists in namespace {namespace}.")
     return True
 
+
 def main():
 
     output = subprocess.run(
@@ -135,23 +136,24 @@ def main():
             for gateway_id in smcp["spec"]["gateways"][gateway_type]:
                 namespace = smcp["spec"]["gateways"][gateway_type][gateway_id]["namespace"]
 
-                if gateway_type == "additionalIngress":
-                    gateway = "ingress"
-                else:
-                    gateway = "egress"
-
                 log.info("*****************************************************************************************")
                 # Check if namespace exists
-                check_namespace_exists(namespace)
+                if check_namespace_exists(namespace):
+                    # Check if deployment exists in the namespace
+                    if check_deployment_exists(namespace, gateway_id):
+                        # Get current replicas
+                        current_replicas = get_current_replicas(namespace, gateway_id)
 
-                # Check if deployment exists in the namespace
-                check_deployment_exists(namespace, gateway_id)
+                        if gateway_type == "additionalIngress":
+                            gateway_name = "injected-gateway-ingress"
+                        else:
+                            gateway_name = "injected-gateway-egress"
                 
-                # Get current replicas
-                current_replicas = get_current_replicas(namespace, gateway_id)
-
-                # Set expected replicas
-                expected_replicas = set_expected_replicas(namespace, current_replicas, gateway)
+                        if check_deployment_exists(namespace, gateway_name):
+                            # Set expected replicas
+                            set_expected_replicas(namespace, current_replicas, gateway_name)
+                        else:
+                            log.error(f"Deployment {gateway_name} does not exist in namespace {namespace}.")
 
 if __name__ == "__main__":
     main()
