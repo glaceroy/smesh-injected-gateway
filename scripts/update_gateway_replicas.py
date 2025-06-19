@@ -23,11 +23,14 @@ formatter = log.Formatter(
 sh.setFormatter(formatter)
 logger.addHandler(sh)
 
+
 def set_expected_replicas(namespace, replicas, gateway):
-    
+
     # Set the expected number of replicas for a given gateway.
 
-    log.info(f"Setting expected replicas for namespace {namespace} with current replicas {replicas}")
+    log.info(
+        f"Setting expected replicas for namespace {namespace} with current replicas {replicas}"
+    )
 
     output = subprocess.run(
         [
@@ -44,16 +47,21 @@ def set_expected_replicas(namespace, replicas, gateway):
         text=True,
     )
     if output.returncode != 0:
-        log.error(f"Failed to scale deployment in namespace {namespace}: {output.stderr}")
+        log.error(
+            f"Failed to scale deployment in namespace {namespace}: {output.stderr}"
+        )
         sys.exit(1)
-    
-    log.info(f"Scaled deployment in namespace {namespace} to {replicas} replicas") 
+
+    log.info(f"Scaled deployment in namespace {namespace} to {replicas} replicas")
+
 
 def get_current_replicas(namespace, gateway_id):
 
     # Get the current number of replicas for a given gateway.
 
-    log.info(f"Getting current replicas for gateway {gateway_id} in namespace {namespace}")
+    log.info(
+        f"Getting current replicas for gateway {gateway_id} in namespace {namespace}"
+    )
     output = subprocess.run(
         [
             "oc",
@@ -69,15 +77,22 @@ def get_current_replicas(namespace, gateway_id):
         text=True,
     )
     if output.returncode != 0:
-        log.error(f"Failed to get replicas for gateway {gateway_id} in namespace {namespace}: {output.stderr}")
+        log.error(
+            f"Failed to get replicas for gateway {gateway_id} in namespace {namespace}: {output.stderr}"
+        )
         sys.exit(1)
     try:
         current_replicas = int(output.stdout.strip())
     except ValueError:
-        log.error(f"Failed to parse replicas for gateway {gateway_id} in namespace {namespace}: {output.stdout}")
+        log.error(
+            f"Failed to parse replicas for gateway {gateway_id} in namespace {namespace}: {output.stdout}"
+        )
         sys.exit(1)
-    log.info(f"Current replicas for gateway {gateway_id} in namespace {namespace}: {current_replicas}")
-    return current_replicas 
+    log.info(
+        f"Current replicas for gateway {gateway_id} in namespace {namespace}: {current_replicas}"
+    )
+    return current_replicas
+
 
 def check_namespace_exists(namespace):
 
@@ -94,6 +109,7 @@ def check_namespace_exists(namespace):
         return False
     log.info(f"Namespace {namespace} exists.")
     return True
+
 
 def check_deployment_exists(namespace, gateway_id):
 
@@ -134,9 +150,13 @@ def main():
     for gateway_type in gateway_list:
         if gateway_type in ["additionalEgress", "additionalIngress"]:
             for gateway_id in smcp["spec"]["gateways"][gateway_type]:
-                namespace = smcp["spec"]["gateways"][gateway_type][gateway_id]["namespace"]
+                namespace = smcp["spec"]["gateways"][gateway_type][gateway_id][
+                    "namespace"
+                ]
 
-                log.info("*****************************************************************************************")
+                log.info(
+                    "*****************************************************************************************"
+                )
                 # Check if namespace exists
                 if check_namespace_exists(namespace):
                     # Check if deployment exists in the namespace
@@ -148,12 +168,17 @@ def main():
                             gateway_name = "injected-gateway-ingress"
                         else:
                             gateway_name = "injected-gateway-egress"
-                
+
                         if check_deployment_exists(namespace, gateway_name):
                             # Set expected replicas
-                            set_expected_replicas(namespace, current_replicas, gateway_name)
+                            set_expected_replicas(
+                                namespace, current_replicas, gateway_name
+                            )
                         else:
-                            log.error(f"Deployment {gateway_name} does not exist in namespace {namespace}.")
+                            log.warning(
+                                f"Deployment {gateway_name} does not exist in namespace {namespace}."
+                            )
+
 
 if __name__ == "__main__":
     main()
