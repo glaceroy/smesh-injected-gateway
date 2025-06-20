@@ -18,7 +18,7 @@ logger = log.getLogger("")
 logger.setLevel(log.DEBUG)
 sh = log.StreamHandler(sys.stdout)
 formatter = log.Formatter(
-    "[%(asctime)s] %(levelname)s : %(message)s",
+    "[%(asctime)s] %(levelname)8s : %(message)s",
     datefmt="%a, %d %b %Y %H:%M:%S",
 )
 sh.setFormatter(formatter)

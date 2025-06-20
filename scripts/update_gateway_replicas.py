@@ -4,7 +4,7 @@ Filename      : update_gateway_replicas.py
 Author        : Aiyaz Khan
 Maintained by : Kyndryl Engineering
 Version       : 1.0
-Description   : This script updates the number of replicas for injected gateways based on the servicemesh control plane gateway replicas.
+Description   : This script updates the number of replicas for injected gateways based on the servicemesh control plane gateway replicas for a given namespace.
 """
 
 import logging as log
@@ -17,7 +17,7 @@ logger = log.getLogger("")
 logger.setLevel(log.DEBUG)
 sh = log.StreamHandler(sys.stdout)
 formatter = log.Formatter(
-    "[%(asctime)s] %(levelname)s : %(message)s",
+    "[%(asctime)s] %(levelname)8s : %(message)s",
     datefmt="%a, %d %b %Y %H:%M:%S",
 )
 sh.setFormatter(formatter)
@@ -28,9 +28,7 @@ def set_expected_replicas(namespace, replicas, gateway):
 
     # Set the expected number of replicas for a given gateway.
 
-    log.info(
-        f"Setting expected replicas for namespace {namespace} with current replicas {replicas}"
-    )
+    #log.info(f"Setting expected replicas for namespace {namespace} with current replicas {replicas}")
 
     output = subprocess.run(
         [
@@ -52,16 +50,15 @@ def set_expected_replicas(namespace, replicas, gateway):
         )
         sys.exit(1)
 
-    log.info(f"Scaled deployment in namespace {namespace} to {replicas} replicas")
+    log.info(f"Scaled deployment {gateway} in namespace {namespace} to {replicas} replicas")
 
 
 def get_current_replicas(namespace, gateway_id):
 
     # Get the current number of replicas for a given gateway.
 
-    log.info(
-        f"Getting current replicas for gateway {gateway_id} in namespace {namespace}"
-    )
+    # log.info(f"Getting current replicas for gateway {gateway_id} in namespace {namespace}")
+
     output = subprocess.run(
         [
             "oc",
@@ -89,7 +86,7 @@ def get_current_replicas(namespace, gateway_id):
         )
         sys.exit(1)
     log.info(
-        f"Current replicas for gateway {gateway_id} in namespace {namespace}: {current_replicas}"
+        f"Current replicas for gateway {gateway_id} in namespace {namespace} is: {current_replicas}"
     )
     return current_replicas
 
@@ -98,7 +95,7 @@ def check_namespace_exists(namespace):
 
     # Check if a namespace exists.
 
-    log.info(f"Checking if namespace {namespace} exists")
+    #log.info(f"Checking if namespace {namespace} exists")
     output = subprocess.run(
         ["oc", "get", "namespace", namespace],
         capture_output=True,
@@ -115,14 +112,14 @@ def check_deployment_exists(namespace, gateway_id):
 
     # Check if a deployment exists in a given namespace.
 
-    log.info(f"Checking if deployment {gateway_id} exists in namespace {namespace}")
+    #log.info(f"Checking if deployment {gateway_id} exists in namespace {namespace}")
     output = subprocess.run(
         ["oc", "get", "deployment", gateway_id, "-n", namespace],
         capture_output=True,
         text=True,
     )
     if output.returncode != 0:
-        log.error(f"Deployment {gateway_id} does not exist in namespace {namespace}.")
+        log.warning(f"Deployment {gateway_id} does not exist in namespace {namespace}. Moving on!")
         return False
     log.info(f"Deployment {gateway_id} exists in namespace {namespace}.")
     return True
@@ -150,13 +147,11 @@ def main():
     for gateway_type in gateway_list:
         if gateway_type in ["additionalEgress", "additionalIngress"]:
             for gateway_id in smcp["spec"]["gateways"][gateway_type]:
-                namespace = smcp["spec"]["gateways"][gateway_type][gateway_id][
-                    "namespace"
-                ]
+                namespace = smcp["spec"]["gateways"][gateway_type][gateway_id]["namespace"]
 
-                log.info(
-                    "*****************************************************************************************"
-                )
+                width = os.get_terminal_size().columns 
+                print('-' * width)
+
                 # Check if namespace exists
                 if check_namespace_exists(namespace):
                     # Check if deployment exists in the namespace
@@ -171,14 +166,9 @@ def main():
 
                         if check_deployment_exists(namespace, gateway_name):
                             # Set expected replicas
-                            set_expected_replicas(
-                                namespace, current_replicas, gateway_name
-                            )
-                        else:
-                            log.warning(
-                                f"Deployment {gateway_name} does not exist in namespace {namespace}."
-                            )
+                            set_expected_replicas(namespace, current_replicas, gateway_name)
 
+    print(' End of Script Execution. '.center(width, '*'))
 
 if __name__ == "__main__":
     main()
