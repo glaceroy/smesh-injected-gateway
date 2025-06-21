@@ -7,42 +7,59 @@ Version       : 1.0
 Description   : This script updates the number of replicas for injected gateways based on the servicemesh control plane gateway replicas for a given namespace.
 """
 
-import logging as log
+import logging
 from datetime import datetime
+import types
 import os
 import subprocess
 import sys
 import yaml
 
-# Create a logger object
-logger = log.getLogger("")
-logger.setLevel(log.INFO)
-sh = log.StreamHandler(sys.stdout)
-# Set up a rotating file handler
-handler = log.FileHandler(
-    '{}_update_gateway_replicas.log'.format(datetime.now().strftime('%Y-%m-%d_%H-%M-%S')),
-    mode='w',
-    encoding='utf-8',
-)
+def log_newline(self, how_many_lines=1):
+    # Switch formatter, output a blank line
+    self.handler.setFormatter(self.blank_formatter)
 
-formatter = log.Formatter(
-    "[%(asctime)s] %(levelname)8s : %(message)s",
-    datefmt="%a, %d %b %Y %H:%M:%S",
-)
-handler.setFormatter(formatter)
-# Add the handler to the logger
-logger.addHandler(handler)
-sh.setFormatter(formatter)
-#sh.addHandler(handler)
-logger.addHandler(sh)
+    for i in range(how_many_lines):
+        self.info('')
 
-#width = os.get_terminal_size().columns 
+    # Switch back
+    self.handler.setFormatter(self.formatter)
+
+
+def create_logger():
+    # Create a handler
+    sh = logging.StreamHandler(sys.stdout)
+    handler = logging.FileHandler(
+        '{}_update_gateway_replicas.log'.format(datetime.now().strftime('%Y-%m-%d_%H-%M-%S')),
+        mode='w',
+        encoding='utf-8',
+    )
+    handler.setLevel(logging.DEBUG)
+    formatter = logging.Formatter(fmt="[%(asctime)s] %(levelname)8s : %(message)s",
+                                  datefmt="%Y-%m-%d %H:%M:%S")        
+    blank_formatter = logging.Formatter(fmt="")
+    handler.setFormatter(formatter)
+
+    # Create a logger, with the previously-defined handler
+    logger = logging.getLogger('logging_test')
+    logger.setLevel(logging.DEBUG)
+    logger.addHandler(handler)
+    sh.setFormatter(formatter)
+    logger.addHandler(sh)
+
+    # Save some data and add a method to logger object
+    logger.handler = handler
+    logger.formatter = formatter
+    logger.blank_formatter = blank_formatter
+    logger.newline = types.MethodType(log_newline, logger)
+
+    return logger
 
 def set_expected_replicas(namespace, replicas, gateway):
 
     # Set the expected number of replicas for a given gateway.
 
-    #log.info(f"Setting expected replicas for namespace {namespace} with current replicas {replicas}")
+    #logger.info(f"Setting expected replicas for namespace {namespace} with current replicas {replicas}")
 
     output = subprocess.run(
         [
@@ -59,19 +76,19 @@ def set_expected_replicas(namespace, replicas, gateway):
         text=True,
     )
     if output.returncode != 0:
-        log.error(
+        logger.error(
             f"Failed to scale deployment in namespace {namespace}: {output.stderr}"
         )
         sys.exit(1)
 
-    log.info(f"Scaled deployment {gateway} in namespace {namespace} to {replicas} replicas")
+    logger.info(f"Scaled deployment {gateway} in namespace {namespace} to {replicas} replicas")
 
 
 def get_current_replicas(namespace, gateway_id):
 
     # Get the current number of replicas for a given gateway.
 
-    # log.info(f"Getting current replicas for gateway {gateway_id} in namespace {namespace}")
+    # logger.info(f"Getting current replicas for gateway {gateway_id} in namespace {namespace}")
 
     output = subprocess.run(
         [
@@ -88,18 +105,18 @@ def get_current_replicas(namespace, gateway_id):
         text=True,
     )
     if output.returncode != 0:
-        log.error(
+        logger.error(
             f"Failed to get replicas for gateway {gateway_id} in namespace {namespace}: {output.stderr}"
         )
         sys.exit(1)
     try:
         current_replicas = int(output.stdout.strip())
     except ValueError:
-        log.error(
+        logger.error(
             f"Failed to parse replicas for gateway {gateway_id} in namespace {namespace}: {output.stdout}"
         )
         sys.exit(1)
-    log.info(
+    logger.info(
         f"Current replicas for gateway {gateway_id} in namespace {namespace} is: {current_replicas}"
     )
     return current_replicas
@@ -109,16 +126,16 @@ def check_namespace_exists(namespace):
 
     # Check if a namespace exists.
 
-    #log.info(f"Checking if namespace {namespace} exists")
+    #logger.info(f"Checking if namespace {namespace} exists")
     output = subprocess.run(
         ["oc", "get", "namespace", namespace],
         capture_output=True,
         text=True,
     )
     if output.returncode != 0:
-        log.error(f"Namespace {namespace} does not exist.")
+        logger.error(f"Namespace {namespace} does not exist.")
         return False
-    log.info(f"Namespace {namespace} exists.")
+    logger.info(f"Namespace {namespace} exists.")
     return True
 
 
@@ -126,16 +143,16 @@ def check_deployment_exists(namespace, gateway_id):
 
     # Check if a deployment exists in a given namespace.
 
-    #log.info(f"Checking if deployment {gateway_id} exists in namespace {namespace}")
+    #logger.info(f"Checking if deployment {gateway_id} exists in namespace {namespace}")
     output = subprocess.run(
         ["oc", "get", "deployment", gateway_id, "-n", namespace],
         capture_output=True,
         text=True,
     )
     if output.returncode != 0:
-        log.warning(f"Deployment {gateway_id} does not exist in namespace {namespace}. Moving on!")
+        logger.warning(f"Deployment {gateway_id} does not exist in namespace {namespace}. Moving on!")
         return False
-    log.info(f"Deployment {gateway_id} exists in namespace {namespace}.")
+    logger.info(f"Deployment {gateway_id} exists in namespace {namespace}.")
     return True
 
 def check_login():
@@ -146,10 +163,10 @@ def check_login():
             stderr=subprocess.STDOUT,
         )
     except subprocess.CalledProcessError:
-        log.error("UNAUTHORIZED...!! Please login to the cluster and try again... !")
+        logger.error("UNAUTHORIZED...!! Please login to the cluster and try again... !")
         sys.exit(1)
 
-    log.info("Already logged in. Using existing login session.. !")
+    #logger.info("Already logged in. Using existing login session.. !")
 
 def main():
 
@@ -172,7 +189,7 @@ def main():
     )
     smcp = yaml.safe_load(output.stdout)
 
-    #print(' Starting Script Execution. '.center(width, '*'))
+    logger.info("============================   Starting Script Execution.  ============================")
 
     gateway_list = smcp["spec"]["gateways"]
 
@@ -183,7 +200,7 @@ def main():
 
                 #print("")
                 #print('-' * width)
-                #print("")
+                logger.newline()
 
                 # Check if namespace exists
                 if check_namespace_exists(namespace):
@@ -201,8 +218,10 @@ def main():
                             # Set expected replicas
                             set_expected_replicas(namespace, current_replicas, gateway_name)
 
-    #print("")
-    #print(' End of Script Execution. '.center(width, '*'))
+    logger.newline()
+    logger.info("============================   Script Execution Completed.   ============================")
 
 if __name__ == "__main__":
+    # Set global logger
+    logger = create_logger()
     main()
