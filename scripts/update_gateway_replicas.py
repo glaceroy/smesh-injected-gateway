@@ -8,19 +8,21 @@ Description   : This script updates the number of replicas for injected gateways
 """
 
 import logging
-from datetime import datetime
-import types
 import os
 import subprocess
 import sys
+import types
+from datetime import datetime
+
 import yaml
+
 
 def log_newline(self, how_many_lines=1):
     # Switch formatter, output a blank line
     self.handler.setFormatter(self.blank_formatter)
 
     for i in range(how_many_lines):
-        self.info('')
+        self.info("")
 
     # Switch back
     self.handler.setFormatter(self.formatter)
@@ -30,18 +32,19 @@ def create_logger():
     # Create a handler
     sh = logging.StreamHandler(sys.stdout)
     handler = logging.FileHandler(
-        '{}_update_gateway_replicas.log'.format(datetime.now().strftime('%Y-%m-%d_%H-%M-%S')),
-        mode='w',
-        encoding='utf-8',
+        f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}_update_gateway_replicas.log",
+        mode="w",
+        encoding="utf-8",
     )
     handler.setLevel(logging.DEBUG)
-    formatter = logging.Formatter(fmt="[%(asctime)s] %(levelname)8s : %(message)s",
-                                  datefmt="%Y-%m-%d %H:%M:%S")        
+    formatter = logging.Formatter(
+        fmt="[%(asctime)s] %(levelname)8s : %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
+    )
     blank_formatter = logging.Formatter(fmt="")
     handler.setFormatter(formatter)
 
     # Create a logger, with the previously-defined handler
-    logger = logging.getLogger('logging_test')
+    logger = logging.getLogger("logging_test")
     logger.setLevel(logging.DEBUG)
     logger.addHandler(handler)
     sh.setFormatter(formatter)
@@ -55,12 +58,10 @@ def create_logger():
 
     return logger
 
+
 def set_expected_replicas(namespace, replicas, gateway):
 
     # Set the expected number of replicas for a given gateway.
-
-    #logger.info(f"Setting expected replicas for namespace {namespace} with current replicas {replicas}")
-
     output = subprocess.run(
         [
             "oc",
@@ -81,15 +82,14 @@ def set_expected_replicas(namespace, replicas, gateway):
         )
         sys.exit(1)
 
-    logger.info(f"Scaled deployment {gateway} in namespace {namespace} to {replicas} replicas")
+    logger.info(
+        f"Scaled deployment {gateway} in namespace {namespace} to {replicas} replicas"
+    )
 
 
 def get_current_replicas(namespace, gateway_id):
 
     # Get the current number of replicas for a given gateway.
-
-    # logger.info(f"Getting current replicas for gateway {gateway_id} in namespace {namespace}")
-
     output = subprocess.run(
         [
             "oc",
@@ -125,8 +125,6 @@ def get_current_replicas(namespace, gateway_id):
 def check_namespace_exists(namespace):
 
     # Check if a namespace exists.
-
-    #logger.info(f"Checking if namespace {namespace} exists")
     output = subprocess.run(
         ["oc", "get", "namespace", namespace],
         capture_output=True,
@@ -142,21 +140,24 @@ def check_namespace_exists(namespace):
 def check_deployment_exists(namespace, gateway_id):
 
     # Check if a deployment exists in a given namespace.
-
-    #logger.info(f"Checking if deployment {gateway_id} exists in namespace {namespace}")
     output = subprocess.run(
         ["oc", "get", "deployment", gateway_id, "-n", namespace],
         capture_output=True,
         text=True,
     )
     if output.returncode != 0:
-        logger.warning(f"Deployment {gateway_id} does not exist in namespace {namespace}. Moving on!")
+        logger.warning(
+            f"Deployment {gateway_id} does not exist in namespace {namespace}. Moving on!"
+        )
         return False
     logger.info(f"Deployment {gateway_id} exists in namespace {namespace}.")
     return True
 
+
 def check_login():
 
+    # Check if the user is logged in to the OpenShift cluster.
+    # If not, prompt the user to log in and exit the script.
     try:
         proc = subprocess.check_output(
             ["oc", "whoami"],
@@ -166,14 +167,12 @@ def check_login():
         logger.error("UNAUTHORIZED...!! Please login to the cluster and try again... !")
         sys.exit(1)
 
-    #logger.info("Already logged in. Using existing login session.. !")
 
 def main():
 
-    # Check if the user is logged in to the OpenShift cluster.
-    # If not, prompt the user to log in and exit the script.
     check_login()
 
+    # Read SMCP configuration from the OpenShift cluster.
     output = subprocess.run(
         [
             "oc",
@@ -189,19 +188,20 @@ def main():
     )
     smcp = yaml.safe_load(output.stdout)
 
-    logger.info("============================   Starting Script Execution.  ============================")
+    logger.info(
+        "============================   Starting Script Execution.  ============================"
+    )
 
     gateway_list = smcp["spec"]["gateways"]
 
     for gateway_type in gateway_list:
         if gateway_type in ["additionalEgress", "additionalIngress"]:
             for gateway_id in smcp["spec"]["gateways"][gateway_type]:
-                namespace = smcp["spec"]["gateways"][gateway_type][gateway_id]["namespace"]
+                namespace = smcp["spec"]["gateways"][gateway_type][gateway_id][
+                    "namespace"
+                ]
 
-                #print("")
-                #print('-' * width)
                 logger.newline()
-
                 # Check if namespace exists
                 if check_namespace_exists(namespace):
                     # Check if deployment exists in the namespace
@@ -216,10 +216,15 @@ def main():
 
                         if check_deployment_exists(namespace, gateway_name):
                             # Set expected replicas
-                            set_expected_replicas(namespace, current_replicas, gateway_name)
+                            set_expected_replicas(
+                                namespace, current_replicas, gateway_name
+                            )
 
     logger.newline()
-    logger.info("============================   Script Execution Completed.   ============================")
+    logger.info(
+        "============================   Script Execution Completed.   ============================"
+    )
+
 
 if __name__ == "__main__":
     # Set global logger
