@@ -18,6 +18,7 @@ import yaml
 
 
 def log_newline(self, how_many_lines=1):
+    
     # Switch formatter, output a blank line
     self.handler.setFormatter(self.blank_formatter)
 
@@ -29,6 +30,7 @@ def log_newline(self, how_many_lines=1):
 
 
 def create_logger():
+
     # Create a handler
     sh = logging.StreamHandler(sys.stdout)
     handler = logging.FileHandler(
