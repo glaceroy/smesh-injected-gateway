@@ -8,21 +8,35 @@ Description   : This script updates the number of replicas for injected gateways
 """
 
 import logging as log
+from datetime import datetime
 import os
 import subprocess
 import sys
 import yaml
 
+# Create a logger object
 logger = log.getLogger("")
-logger.setLevel(log.DEBUG)
+logger.setLevel(log.INFO)
 sh = log.StreamHandler(sys.stdout)
+# Set up a rotating file handler
+handler = log.FileHandler(
+    '{}_update_gateway_replicas.log'.format(datetime.now().strftime('%Y-%m-%d_%H-%M-%S')),
+    mode='w',
+    encoding='utf-8',
+)
+
 formatter = log.Formatter(
     "[%(asctime)s] %(levelname)8s : %(message)s",
     datefmt="%a, %d %b %Y %H:%M:%S",
 )
+handler.setFormatter(formatter)
+# Add the handler to the logger
+logger.addHandler(handler)
 sh.setFormatter(formatter)
+#sh.addHandler(handler)
 logger.addHandler(sh)
 
+#width = os.get_terminal_size().columns 
 
 def set_expected_replicas(namespace, replicas, gateway):
 
@@ -124,8 +138,24 @@ def check_deployment_exists(namespace, gateway_id):
     log.info(f"Deployment {gateway_id} exists in namespace {namespace}.")
     return True
 
+def check_login():
+
+    try:
+        proc = subprocess.check_output(
+            ["oc", "whoami"],
+            stderr=subprocess.STDOUT,
+        )
+    except subprocess.CalledProcessError:
+        log.error("UNAUTHORIZED...!! Please login to the cluster and try again... !")
+        sys.exit(1)
+
+    log.info("Already logged in. Using existing login session.. !")
 
 def main():
+
+    # Check if the user is logged in to the OpenShift cluster.
+    # If not, prompt the user to log in and exit the script.
+    check_login()
 
     output = subprocess.run(
         [
@@ -142,6 +172,8 @@ def main():
     )
     smcp = yaml.safe_load(output.stdout)
 
+    #print(' Starting Script Execution. '.center(width, '*'))
+
     gateway_list = smcp["spec"]["gateways"]
 
     for gateway_type in gateway_list:
@@ -149,8 +181,9 @@ def main():
             for gateway_id in smcp["spec"]["gateways"][gateway_type]:
                 namespace = smcp["spec"]["gateways"][gateway_type][gateway_id]["namespace"]
 
-                width = os.get_terminal_size().columns 
-                print('-' * width)
+                #print("")
+                #print('-' * width)
+                #print("")
 
                 # Check if namespace exists
                 if check_namespace_exists(namespace):
@@ -168,7 +201,8 @@ def main():
                             # Set expected replicas
                             set_expected_replicas(namespace, current_replicas, gateway_name)
 
-    print(' End of Script Execution. '.center(width, '*'))
+    #print("")
+    #print(' End of Script Execution. '.center(width, '*'))
 
 if __name__ == "__main__":
     main()
