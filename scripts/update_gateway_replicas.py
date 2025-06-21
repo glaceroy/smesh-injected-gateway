@@ -18,7 +18,7 @@ import yaml
 
 
 def log_newline(self, how_many_lines=1):
-    
+
     # Switch formatter, output a blank line
     self.handler.setFormatter(self.blank_formatter)
 
@@ -61,7 +61,7 @@ def create_logger():
     return logger
 
 
-def set_expected_replicas(namespace, replicas, gateway):
+def set_replicas(namespace, replicas, gateway):
 
     # Set the expected number of replicas for a given gateway.
     output = subprocess.run(
@@ -89,7 +89,7 @@ def set_expected_replicas(namespace, replicas, gateway):
     )
 
 
-def get_current_replicas(namespace, gateway_id):
+def get_replicas(namespace, gateway_id):
 
     # Get the current number of replicas for a given gateway.
     output = subprocess.run(
@@ -124,7 +124,7 @@ def get_current_replicas(namespace, gateway_id):
     return current_replicas
 
 
-def check_namespace_exists(namespace):
+def check_namespace(namespace):
 
     # Check if a namespace exists.
     output = subprocess.run(
@@ -139,7 +139,7 @@ def check_namespace_exists(namespace):
     return True
 
 
-def check_deployment_exists(namespace, gateway_id):
+def check_deployment(namespace, gateway_id):
 
     # Check if a deployment exists in a given namespace.
     output = subprocess.run(
@@ -205,20 +205,20 @@ def main():
 
                 logger.newline()
                 # Check if namespace exists
-                if check_namespace_exists(namespace):
+                if check_namespace(namespace):
                     # Check if deployment exists in the namespace
-                    if check_deployment_exists(namespace, gateway_id):
+                    if check_deployment(namespace, gateway_id):
                         # Get current replicas
-                        current_replicas = get_current_replicas(namespace, gateway_id)
+                        current_replicas = get_replicas(namespace, gateway_id)
 
                         if gateway_type == "additionalIngress":
                             gateway_name = "injected-gateway-ingress"
                         else:
                             gateway_name = "injected-gateway-egress"
 
-                        if check_deployment_exists(namespace, gateway_name):
+                        if check_deployment(namespace, gateway_name):
                             # Set expected replicas
-                            set_expected_replicas(
+                            set_replicas(
                                 namespace, current_replicas, gateway_name
                             )
 
