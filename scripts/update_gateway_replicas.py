@@ -85,7 +85,7 @@ def set_replicas(namespace, replicas, gateway):
         sys.exit(1)
 
     logger.info(
-        f"Scaled deployment {gateway} in namespace {namespace} to {replicas} replicas"
+        f"Scaled deployment {gateway} to {replicas} replicas"
     )
 
 
@@ -108,18 +108,18 @@ def get_replicas(namespace, gateway_id):
     )
     if output.returncode != 0:
         logger.error(
-            f"Failed to get replicas for gateway {gateway_id} in namespace {namespace}: {output.stderr}"
+            f"Failed to get replicas for deployment {gateway_id} in namespace {namespace}: {output.stderr}"
         )
         sys.exit(1)
     try:
         current_replicas = int(output.stdout.strip())
     except ValueError:
         logger.error(
-            f"Failed to parse replicas for gateway {gateway_id} in namespace {namespace}: {output.stdout}"
+            f"Failed to parse replicas for deployment {gateway_id} in namespace {namespace}: {output.stdout}"
         )
         sys.exit(1)
     logger.info(
-        f"Current replicas for gateway {gateway_id} in namespace {namespace} is: {current_replicas}"
+        f"Current replicas for deployment {gateway_id} is: {current_replicas}"
     )
     return current_replicas
 
