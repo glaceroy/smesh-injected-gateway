@@ -7,13 +7,14 @@ Version       : 1.0
 Description   : This script disables smcp gateway by setting enabled: false in the servicemesh control plane configuration.
 """
 
+import json
 import logging
 import os
 import subprocess
 import sys
 import types
 from datetime import datetime
-import json
+
 import yaml
 
 
@@ -60,6 +61,7 @@ def create_logger():
 
     return logger
 
+
 def patch_smcp(gateway_type, gateway_id):
 
     patch_data = [
@@ -83,7 +85,7 @@ def patch_smcp(gateway_type, gateway_id):
             "-n",
             "istio-system",
             "--type=json",
-            f"-p={json_patch}"
+            f"-p={json_patch}",
         ],
         capture_output=True,
     )
@@ -93,7 +95,6 @@ def patch_smcp(gateway_type, gateway_id):
         sys.exit(1)
     else:
         logger.info("Successfully patched smcp: %s", patch_data)
-        #logger.info("SMCP patched successfully.")
 
 
 def check_login():
@@ -142,10 +143,12 @@ def main():
             for gateway_id in smcp["spec"]["gateways"][gateway_type]:
                 namespace = smcp["spec"]["gateways"][gateway_type][gateway_id]["namespace"]
 
-                logger.info("Disabling SMCP gateway: %s in namespace: %s", gateway_id, namespace)
+                logger.info(
+                    "Disabling SMCP gateway: %s in namespace: %s", gateway_id, namespace
+                )
 
                 patch_smcp(gateway_type, gateway_id)
-              
+
                 logger.newline()
 
     logger.info(
