@@ -13,7 +13,7 @@ import subprocess
 import sys
 import types
 from datetime import datetime
-
+import json
 import yaml
 
 
@@ -60,7 +60,18 @@ def create_logger():
 
     return logger
 
-def patch_smcp(smcp):
+def patch_smcp(gateway_type, gateway_id):
+
+    patch_data = [
+        {
+            "op": "replace",
+            "path": f"/spec/gateways/{gateway_type}/{gateway_id}/enabled",
+            "value": False,
+        }
+    ]
+
+    # Convert patch_data to a JSON string
+    json_patch = json.dumps(patch_data)
 
     # Patch the SMCP configuration to disable the gateways.
     output = subprocess.run(
@@ -71,9 +82,8 @@ def patch_smcp(smcp):
             "app-mesh-01",
             "-n",
             "istio-system",
-            "--type=merge",
-            "-p",
-            yaml.dump(smcp),
+            "--type=json",
+            f"-p={json_patch}"
         ],
         capture_output=True,
     )
@@ -82,7 +92,8 @@ def patch_smcp(smcp):
         logger.error("Failed to patch SMCP: %s", output.stderr.decode())
         sys.exit(1)
     else:
-        logger.info("SMCP patched successfully.")
+        logger.info("Successfully patched smcp: %s", patch_data)
+        #logger.info("SMCP patched successfully.")
 
 
 def check_login():
@@ -122,23 +133,21 @@ def main():
     logger.info(
         "============================   Starting Script Execution.  ============================"
     )
+    logger.newline()
 
     gateway_list = smcp["spec"]["gateways"]
 
     for gateway_type in gateway_list:
         if gateway_type in ["additionalEgress", "additionalIngress"]:
             for gateway_id in smcp["spec"]["gateways"][gateway_type]:
-              # Disable smcp gateway by setting enabled: false
-              namespace = smcp["spec"]["gateways"][gateway_type][gateway_id]["namespace"]
-              change = smcp["spec"]["gateways"][gateway_type][gateway_id]["enabled"] = False
-              patch_smcp(change)
-              
-              logger.info("Disabling SMCP gateway: %s in namespace: %s", gateway_id, namespace)
-              
-              logger.newline()
+                namespace = smcp["spec"]["gateways"][gateway_type][gateway_id]["namespace"]
 
+                logger.info("Disabling SMCP gateway: %s in namespace: %s", gateway_id, namespace)
 
-    logger.newline()
+                patch_smcp(gateway_type, gateway_id)
+              
+                logger.newline()
+
     logger.info(
         "============================   Script Execution Completed.   ============================"
     )

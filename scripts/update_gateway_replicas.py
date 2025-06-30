@@ -53,6 +53,7 @@ def create_logger():
     logger.addHandler(sh)
 
     # Save some data and add a method to logger object
+
     logger.handler = handler
     logger.formatter = formatter
     logger.blank_formatter = blank_formatter
