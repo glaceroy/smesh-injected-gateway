@@ -7,68 +7,105 @@ Version       : 1.0
 Description   : This script removes the ownership labels in a service.
 """
 
-import logging as log
-import os
+import logging
 import subprocess
 import sys
 import yaml
+import types
+from datetime import datetime
 
-logger = log.getLogger("")
-logger.setLevel(log.DEBUG)
-sh = log.StreamHandler(sys.stdout)
-formatter = log.Formatter(
-    "[%(asctime)s] %(levelname)8s : %(message)s",
-    datefmt="%a, %d %b %Y %H:%M:%S",
-)
-sh.setFormatter(formatter)
-logger.addHandler(sh)
+def log_newline(self, how_many_lines=1):
+
+    # Switch formatter, output a blank line
+    self.handler.setFormatter(self.blank_formatter)
+
+    for i in range(how_many_lines):
+        self.info("")
+
+    # Switch back
+    self.handler.setFormatter(self.formatter)
+
+
+def create_logger():
+
+    # Create a handler
+    sh = logging.StreamHandler(sys.stdout)
+    handler = logging.FileHandler(
+        f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}_update_service-labels.log",
+        mode="w",
+        encoding="utf-8",
+    )
+    handler.setLevel(logging.DEBUG)
+    formatter = logging.Formatter(
+        fmt="[%(asctime)s] %(levelname)8s : %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
+    )
+    blank_formatter = logging.Formatter(fmt="")
+    handler.setFormatter(formatter)
+
+    # Create a logger, with the previously-defined handler
+    logger = logging.getLogger("logging_test")
+    logger.setLevel(logging.DEBUG)
+    logger.addHandler(handler)
+    sh.setFormatter(formatter)
+    logger.addHandler(sh)
+
+    # Save some data and add a method to logger object
+
+    logger.handler = handler
+    logger.formatter = formatter
+    logger.blank_formatter = blank_formatter
+    logger.newline = types.MethodType(log_newline, logger)
+
+    return logger
 
 def remove_service_labels(namespace, service):
 
     # Remove specific labels from a service in the given namespace.
 
-    log.info(f"Removing labels from service {service} in namespace {namespace}")
     output = subprocess.run(
-        ["oc", "label", "svc", service, "-n", namespace, "--overwrite", "app.kubernetes.io/managed-by-"],
+        ["oc", "label", "svc", service, "-n", namespace, "--overwrite", "app.kubernetes.io/managed-by=maistra-istio-operator"],
         capture_output=True,
         text=True,
     )
     if output.returncode != 0:
-        log.error(f"Failed to remove labels from service {service} in namespace {namespace}: {output.stderr}")
+        logger.error(f"Failed to remove labels from service {service} in namespace {namespace}: {output.stderr}")
         sys.exit(1)
-    log.info(f"Labels removed from service {service} in namespace {namespace}")
+    else:
+        logger.info(f"SMESH Management Labels removed from service {service} in namespace {namespace}")
 
 def check_service_exists(namespace, service):
   
     # Check if a service exists in the given namespace.
 
-    log.info(f"Checking if service {service} exists in namespace {namespace}")
     output = subprocess.run(
         ["oc", "get", "svc", service, "-n", namespace],
         capture_output=True,
         text=True,
     )
     if output.returncode != 0:
-        log.error(f"Service {service} does not exist in namespace {namespace}.")
+        logger.warning(f"Service {service} does not exist in namespace {namespace}.")
+        logger.newline()
         return False
-    log.info(f"Service {service} exists in namespace {namespace}.")
-    return True
+    else:
+        logger.info(f"Service {service} exists in namespace {namespace}.")
+        return True
 
 def check_namespace_exists(namespace):
 
     # Check if a namespace exists.
 
-    log.info(f"Checking if namespace {namespace} exists")
     output = subprocess.run(
         ["oc", "get", "namespace", namespace],
         capture_output=True,
         text=True,
     )
     if output.returncode != 0:
-        log.error(f"Namespace {namespace} does not exist.")
+        logger.warning(f"Namespace {namespace} does not exist.")
+        logger.newline()
         return False
-    log.info(f"Namespace {namespace} exists.")
-    return True
+    else:
+        logger.info(f"Namespace {namespace} exists.")
+        return True
 
 def main():
 
@@ -87,6 +124,11 @@ def main():
     )
     smcp = yaml.safe_load(output.stdout)
 
+    logger.info(
+        "============================   Starting Script Execution.  ============================"
+    )
+    logger.newline()
+
     gateway_list = smcp["spec"]["gateways"]
 
     for gateway_type in gateway_list:
@@ -99,8 +141,16 @@ def main():
                     # Check if deployment exists in the namespace
                     if check_service_exists(namespace, gateway_id):
                     # Remove service labels  
-                        remove_service_labels(namespace, gateway_id):
+                        remove_service_labels(namespace, gateway_id)
+                
+                        logger.newline()
+
+    logger.info(
+        "============================   Script Execution Completed.   ============================"
+    )
 
 
 if __name__ == "__main__":
+    # Set global logger
+    logger = create_logger()
     main()

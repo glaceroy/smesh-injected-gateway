@@ -6,25 +6,59 @@ Maintained by : Kyndryl Engineering
 Version       : 1.0
 """
 
-import logging as log
-import os
-import subprocess
+import logging
 import sys
-import pathlib
+from datetime import datetime
+import types
+import os
+from pathlib import Path
+
 from ruamel.yaml import YAML
-
 yaml = YAML()
-yaml.preserve_quotes = True
 
-logger = log.getLogger("")
-logger.setLevel(log.DEBUG)
-sh = log.StreamHandler(sys.stdout)
-formatter = log.Formatter(
-    "[%(asctime)s] %(levelname)8s : %(message)s",
-    datefmt="%a, %d %b %Y %H:%M:%S",
-)
-sh.setFormatter(formatter)
-logger.addHandler(sh)
+def log_newline(self, how_many_lines=1):
+
+    # Switch formatter, output a blank line
+    self.handler.setFormatter(self.blank_formatter)
+
+    for i in range(how_many_lines):
+        self.info("")
+
+    # Switch back
+    self.handler.setFormatter(self.formatter)
+
+
+def create_logger():
+
+    # Create a handler
+    sh = logging.StreamHandler(sys.stdout)
+    handler = logging.FileHandler(
+        f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}_disable_smcp_gateway.log",
+        mode="w",
+        encoding="utf-8",
+    )
+    handler.setLevel(logging.DEBUG)
+    formatter = logging.Formatter(
+        fmt="[%(asctime)s] %(levelname)8s : %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
+    )
+    blank_formatter = logging.Formatter(fmt="")
+    handler.setFormatter(formatter)
+
+    # Create a logger, with the previously-defined handler
+    logger = logging.getLogger("logging_test")
+    logger.setLevel(logging.DEBUG)
+    logger.addHandler(handler)
+    sh.setFormatter(formatter)
+    logger.addHandler(sh)
+
+    # Save some data and add a method to logger object
+    logger.handler = handler
+    logger.formatter = formatter
+    logger.blank_formatter = blank_formatter
+    logger.newline = types.MethodType(log_newline, logger)
+
+    return logger
+
 
 
 def update_config_file(cluster_val_loaded):
@@ -32,16 +66,16 @@ def update_config_file(cluster_val_loaded):
     with open("cluster_values.yaml", "w") as igw_file:
         yaml.dump(cluster_val_loaded, igw_file)
 
-    log.info("Cluster values config file is updated.. !")
+    logger.info("Cluster values config file is updated.. !")
 
 
 def check_input_files():
     try:
         # Attempt to open the file
         with open("input_namespace.yaml", "r") as file:
-            log.info("The required files exist.")
+            logger.info("The required files exist.")
     except FileNotFoundError:
-        log.error("Required input files dont exist. Exiting.. !")
+        logger.error("Required input files dont exist. Exiting.. !")
         sys.exit(1)
 
 
@@ -70,4 +104,6 @@ def main():
 
 
 if __name__ == "__main__":
+    # Set global logger
+    logger = create_logger()
     main()
