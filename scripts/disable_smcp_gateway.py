@@ -9,7 +9,6 @@ Description   : This script disables smcp gateway by setting enabled: false in t
 
 import json
 import logging
-import os
 import subprocess
 import sys
 import types
@@ -95,6 +94,7 @@ def patch_smcp(gateway_type, gateway_id):
         sys.exit(1)
     else:
         logger.info("Successfully patched smcp: %s", patch_data)
+        logger.newline()
 
 
 def check_login():
@@ -102,7 +102,7 @@ def check_login():
     # Check if the user is logged in to the OpenShift cluster.
     # If not, prompt the user to log in and exit the script.
     try:
-        proc = subprocess.check_output(
+        subprocess.check_output(
             ["oc", "whoami"],
             stderr=subprocess.STDOUT,
         )
@@ -141,15 +141,15 @@ def main():
     for gateway_type in gateway_list:
         if gateway_type in ["additionalEgress", "additionalIngress"]:
             for gateway_id in smcp["spec"]["gateways"][gateway_type]:
-                namespace = smcp["spec"]["gateways"][gateway_type][gateway_id]["namespace"]
+                namespace = smcp["spec"]["gateways"][gateway_type][gateway_id][
+                    "namespace"
+                ]
 
                 logger.info(
                     "Disabling SMCP gateway: %s in namespace: %s", gateway_id, namespace
                 )
 
                 patch_smcp(gateway_type, gateway_id)
-
-                logger.newline()
 
     logger.info(
         "============================   Script Execution Completed.   ============================"

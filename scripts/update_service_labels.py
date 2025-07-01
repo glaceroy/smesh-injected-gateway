@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Filename      : update_service-labels.py
+Filename      : remove_service_labels.py
 Author        : Aiyaz Khan
 Maintained by : Kyndryl Engineering
 Version       : 1.0
@@ -10,9 +10,11 @@ Description   : This script removes the ownership labels in a service.
 import logging
 import subprocess
 import sys
-import yaml
 import types
 from datetime import datetime
+
+import yaml
+
 
 def log_newline(self, how_many_lines=1):
 
@@ -31,7 +33,7 @@ def create_logger():
     # Create a handler
     sh = logging.StreamHandler(sys.stdout)
     handler = logging.FileHandler(
-        f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}_update_service-labels.log",
+        f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}_remove_service_labels.log",
         mode="w",
         encoding="utf-8",
     )
@@ -58,23 +60,38 @@ def create_logger():
 
     return logger
 
+
 def remove_service_labels(namespace, service):
 
     # Remove specific labels from a service in the given namespace.
 
     output = subprocess.run(
-        ["oc", "label", "svc", service, "-n", namespace, "--overwrite", "app.kubernetes.io/managed-by=maistra-istio-operator"],
+        [
+            "oc",
+            "label",
+            "svc",
+            service,
+            "-n",
+            namespace,
+            "--overwrite",
+            "app.kubernetes.io/managed-by-",
+        ],
         capture_output=True,
         text=True,
     )
     if output.returncode != 0:
-        logger.error(f"Failed to remove labels from service {service} in namespace {namespace}: {output.stderr}")
+        logger.error(
+            f"Failed to remove labels from service {service} in namespace {namespace}: {output.stderr}"
+        )
         sys.exit(1)
     else:
-        logger.info(f"SMESH Management Labels removed from service {service} in namespace {namespace}")
+        logger.info(
+            f"SMESH Management Labels removed from service {service} in namespace {namespace}"
+        )
+
 
 def check_service_exists(namespace, service):
-  
+
     # Check if a service exists in the given namespace.
 
     output = subprocess.run(
@@ -89,6 +106,7 @@ def check_service_exists(namespace, service):
     else:
         logger.info(f"Service {service} exists in namespace {namespace}.")
         return True
+
 
 def check_namespace_exists(namespace):
 
@@ -107,8 +125,26 @@ def check_namespace_exists(namespace):
         logger.info(f"Namespace {namespace} exists.")
         return True
 
+
+def check_login():
+
+    # Check if the user is logged in to the OpenShift cluster.
+    # If not, prompt the user to log in and exit the script.
+    try:
+        subprocess.check_output(
+            ["oc", "whoami"],
+            stderr=subprocess.STDOUT,
+        )
+    except subprocess.CalledProcessError:
+        logger.error("UNAUTHORIZED...!! Please login to the cluster and try again... !")
+        sys.exit(1)
+
+
 def main():
 
+    check_login()
+
+    # Read SMCP configuration from the OpenShift cluster.
     output = subprocess.run(
         [
             "oc",
@@ -127,24 +163,25 @@ def main():
     logger.info(
         "============================   Starting Script Execution.  ============================"
     )
-    logger.newline()
 
     gateway_list = smcp["spec"]["gateways"]
 
     for gateway_type in gateway_list:
         if gateway_type in ["additionalEgress", "additionalIngress"]:
             for gateway_id in smcp["spec"]["gateways"][gateway_type]:
-                namespace = smcp["spec"]["gateways"][gateway_type][gateway_id]["namespace"]
+                namespace = smcp["spec"]["gateways"][gateway_type][gateway_id][
+                    "namespace"
+                ]
 
+                logger.newline()
                 # Check if namespace exists
                 if check_namespace_exists(namespace):
                     # Check if deployment exists in the namespace
                     if check_service_exists(namespace, gateway_id):
-                    # Remove service labels  
+                        # Remove service labels
                         remove_service_labels(namespace, gateway_id)
-                
-                        logger.newline()
 
+    logger.newline()
     logger.info(
         "============================   Script Execution Completed.   ============================"
     )

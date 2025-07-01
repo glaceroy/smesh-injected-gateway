@@ -8,7 +8,6 @@ Description   : This script updates the number of replicas for injected gateways
 """
 
 import logging
-import os
 import subprocess
 import sys
 import types
@@ -162,7 +161,7 @@ def check_login():
     # Check if the user is logged in to the OpenShift cluster.
     # If not, prompt the user to log in and exit the script.
     try:
-        proc = subprocess.check_output(
+        subprocess.check_output(
             ["oc", "whoami"],
             stderr=subprocess.STDOUT,
         )
@@ -200,9 +199,7 @@ def main():
     for gateway_type in gateway_list:
         if gateway_type in ["additionalEgress", "additionalIngress"]:
             for gateway_id in smcp["spec"]["gateways"][gateway_type]:
-                namespace = smcp["spec"]["gateways"][gateway_type][gateway_id][
-                    "namespace"
-                ]
+                namespace = smcp["spec"]["gateways"][gateway_type][gateway_id]["namespace"]
 
                 logger.newline()
                 # Check if namespace exists
