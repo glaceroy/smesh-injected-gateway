@@ -11,7 +11,6 @@ project:
     requests:
       cpu: 150m
       memory: 150Mi
-    injected_egress: 'true'
   ingress:
     id: '001'
     enabled: true
@@ -22,7 +21,6 @@ project:
     requests:
       cpu: 150m
       memory: 150Mi
-    injected_ingress: 'true'
   labels:
     snow: IT.OCP.CLOUD.LAB
     cmdb_appid: AL12345
@@ -113,7 +111,6 @@ project:
     requests:
       cpu: 150m
       memory: 150Mi
-    injected_egress: 'true'
   ingress:
     id: '003'
     enabled: true
@@ -124,7 +121,6 @@ project:
     requests:
       cpu: 150m
       memory: 150Mi
-    injected_ingress: 'true'
   labels:
     snow: IT.OCP.CLOUD.LAB
     cmdb_appid: AL10432
