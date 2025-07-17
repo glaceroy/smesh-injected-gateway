@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Filename      : update_gateway_replicas.py
+Filename      : update_injected_gateway_replicas.py
 Author        : Aiyaz Khan
 Maintained by : Kyndryl Engineering
 Version       : 1.0
@@ -33,7 +33,7 @@ def create_logger():
     # Create a handler
     sh = logging.StreamHandler(sys.stdout)
     handler = logging.FileHandler(
-        f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}_update_gateway_replicas.log",
+        f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}_update_injected_gateway_replicas.log",
         mode="w",
         encoding="utf-8",
     )

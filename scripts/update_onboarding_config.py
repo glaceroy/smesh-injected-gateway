@@ -59,51 +59,60 @@ def create_logger():
 
     return logger
 
-
-
-def update_config_file(cluster_val_loaded):
+def update_config_file(cluster_values):
 
     with open("cluster_values.yaml", "w") as igw_file:
-        yaml.dump(cluster_val_loaded, igw_file)
-
-    logger.info("Cluster values config file is updated.. !")
-
-
-def check_input_files():
-    try:
-        # Attempt to open the file
-        with open("input_namespace.yaml", "r") as file:
-            logger.info("The required files exist.")
-    except FileNotFoundError:
-        logger.error("Required input files dont exist. Exiting.. !")
-        sys.exit(1)
+        yaml.dump(cluster_values, igw_file)
 
 
 def main():
 
-    check_input_files()
+    files = [file1, file2]
+    # Check if the required files exist
+    for file in files:
+        if os.path.isfile(file):
+            logger.info(f"The required file {file} exists.")  
+        else:
+            logger.error(f"Required input file {file} does not exist. Exiting.. !")
+            sys.exit(1)
+              
 
     # Read input namespace yaml file
-    with open("input_namespace.yaml", "r") as i_stream:
-        data_loaded = yaml.load(i_stream)
+    with open("input_namespace.yaml", "r") as ns_stream:
+        ns_list = yaml.load(ns_stream)
 
-    for val in data_loaded:
-        with open("cluster_values.yaml", "r") as c_stream:
-            cluster_val_loaded = yaml.load(c_stream)
 
-        for ns_index, namespace in enumerate(cluster_val_loaded["project"]):
-            if val == namespace["namespace"]:
-                for index, item in enumerate(namespace):
-                    if item == "egress":
-                        cluster_val_loaded["project"][ns_index]["egress"]["injected_egress"] = "true"
+    # Read cluster values yaml file
+    for ns in ns_list:
+        with open("cluster_values.yaml", "r") as cv_stream:
+            cluster_values = yaml.load(cv_stream)
 
-                    elif item == "ingress":
-                        cluster_val_loaded["project"][ns_index]["ingress"]["injected_ingress"] = "true"
+        for ns_index, namespace in enumerate(cluster_values["project"]):
+            if ns == namespace["namespace"]:
+                for index, key in enumerate(namespace):
+                    if key == "egress":
+                        cluster_values["project"][ns_index]["egress"]["injected_egress"] = "true"
 
-                update_config_file(cluster_val_loaded)
+                    elif key == "ingress":
+                        cluster_values["project"][ns_index]["ingress"]["injected_ingress"] = "true"
+
+                update_config_file(cluster_values)
+
+    logger.info("Cluster values config file is updated.. !")
 
 
 if __name__ == "__main__":
     # Set global logger
     logger = create_logger()
+
+    # Check if two arguments are provided (not counting the script name)
+    if len(sys.argv) != 3:
+        logger.error("Please provide full path for two input values.")
+        logger.info("Usage: python update_onboarding_config.py <input_namespace.yaml> <cluster_values.yaml>")
+        sys.exit(1)  # Exit with error status
+
+    # Assign values
+    file1 = sys.argv[1]
+    file2 = sys.argv[2]
+
     main()
