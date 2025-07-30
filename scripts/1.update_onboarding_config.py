@@ -33,7 +33,7 @@ def create_logger():
     # Create a handler
     sh = logging.StreamHandler(sys.stdout)
     handler = logging.FileHandler(
-        f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}_disable_smcp_gateway.log",
+        f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}_update_onboarding_config.log",
         mode="w",
         encoding="utf-8",
     )
@@ -61,7 +61,7 @@ def create_logger():
 
 def update_config_file(cluster_values):
 
-    with open("cluster_values.yaml", "w") as igw_file:
+    with open(file2, "w") as igw_file:
         yaml.dump(cluster_values, igw_file)
 
 
@@ -78,14 +78,21 @@ def main():
               
 
     # Read input namespace yaml file
-    with open("input_namespace.yaml", "r") as ns_stream:
+    with open(file1, "r") as ns_stream:
         ns_list = yaml.load(ns_stream)
 
 
     # Read cluster values yaml file
     for ns in ns_list:
-        with open("cluster_values.yaml", "r") as cv_stream:
+        with open(file2, "r") as cv_stream:
             cluster_values = yaml.load(cv_stream)
+
+        # Check if the namespace exists in the cluster values
+        if "project" not in cluster_values: 
+            logger.error("The cluster values file does not contain 'project' key. Exiting.. !")
+            logger.error("Check the order of input files passed to the script. Exiting.. !")
+            logger.info("USAGE: python update_onboarding_config.py <input_namespace.yaml> <cluster_values.yaml>")
+            sys.exit(1)
 
         for ns_index, namespace in enumerate(cluster_values["project"]):
             if ns == namespace["namespace"]:
@@ -107,8 +114,8 @@ if __name__ == "__main__":
 
     # Check if two arguments are provided (not counting the script name)
     if len(sys.argv) != 3:
-        logger.error("Please provide full path for two input values.")
-        logger.info("Usage: python update_onboarding_config.py <input_namespace.yaml> <cluster_values.yaml>")
+        logger.info("USAGE: python update_onboarding_config.py <input_namespace.yaml> <cluster_values.yaml>")
+        logger.error("Please provide full path for the two input values.")
         sys.exit(1)  # Exit with error status
 
     # Assign values
