@@ -61,8 +61,9 @@ def create_logger():
 
     return logger
 
-def calculate_quota_resources(namespace, gateway_id):
-    
+
+def calculate_namespace_resources(namespace):
+
     quota_name = f"{namespace}-quota"
     # Get the resource quota for the namespace.
     output = subprocess.run(
@@ -71,56 +72,83 @@ def calculate_quota_resources(namespace, gateway_id):
         text=True,
     )
     quota = yaml.safe_load(output.stdout)
-    
+
     total_requests_cpu = quota["status"]["hard"].get("requests.cpu")
-    total_limits_cpu = quota["status"]["hard"].get("limits.cpu")
     total_requests_memory = quota["status"]["hard"].get("requests.memory")
+    total_limits_cpu = quota["status"]["hard"].get("limits.cpu")
     total_limits_memory = quota["status"]["hard"].get("limits.memory")
 
-    logger.info(f"Resource quota:")
-    logger.info(f"Total Requests CPU: {total_requests_cpu}m CPU")
-    logger.info(f"Total Requests Mem: {total_requests_memory}Mi Memory")
-    logger.info(f"Total Limits CPU: {total_limits_cpu}m CPU")
-    logger.info(f"Total Limits Mem: {total_limits_memory}Mi Memory")
+    logger.info(f"TOTAL Resource quota:")
+    logger.info(f"Total Requests CPU: {total_requests_cpu} CPU")
+    logger.info(f"Total Requests Mem: {total_requests_memory} Memory")
+    logger.info(f"Total Limits CPU: {total_limits_cpu} CPU")
+    logger.info(f"Total Limits Mem: {total_limits_memory} Memory")
+
+    used_requests_cpu = quota["status"]["used"].get("requests.cpu")
+    used_requests_memory = quota["status"]["used"].get("requests.memory")
+    used_limits_cpu = quota["status"]["used"].get("limits.cpu")
+    used_limits_memory = quota["status"]["used"].get("limits.memory")
+
+    logger.info(f"USED Resource quota:")
+    logger.info(f"Used Requests CPU: {used_requests_cpu} CPU")
+    logger.info(f"Used Requests Mem: {used_requests_memory} Memory")
+    logger.info(f"Used Limits CPU: {used_limits_cpu} CPU")
+    logger.info(f"Used Limits Mem: {used_limits_memory} Memory")
 
 
 def calculate_deployment_resources(namespace, gateway_id):
-
-    # Get the deployment's resource requests and limits.
-    output = subprocess.run(
-        ["oc", "get", "deployment", gateway_id, "-n", namespace, "-o", "yaml"],
-        capture_output=True,
-        text=True,
-    )
-    deployment = yaml.safe_load(output.stdout)
-
-    if not deployment or "spec" not in deployment or "template" not in deployment["spec"]:
-        logger.error(f"Deployment {gateway_id} does not have valid spec.")
-        return
-
-    containers = deployment["spec"]["template"]["spec"].get("containers", [])
     
-    total_requests_cpu = 0
-    total_limits_cpu = 0
-    total_requests_memory = 0
-    total_limits_memory = 0
+    ingress_deployment = gateway_id
+    egress_deployment = gateway_id.replace("ig", "eg")
+    for deployment in [ingress_deployment, egress_deployment]:
+        if check_deployment(namespace, deployment):
+            # Get the deployment's resource requests and limits.
+            output = subprocess.run(
+                ["oc", "get", "deployment", deployment, "-n", namespace, "-o", "yaml"],
+                capture_output=True,
+                text=True,
+            )
+            deployment_yaml = yaml.safe_load(output.stdout)
 
-    for container in containers:
-        resources = container.get("resources", {})
-        requests = resources.get("requests", {})
-        limits = resources.get("limits", {})
-        replicas = deployment["spec"].get("replicas", 1)
-        
-        total_requests_cpu += int(requests.get("cpu", 0).replace("m", ""))
-        total_limits_cpu += int(limits.get("cpu", 0).replace("m", ""))
-        total_requests_memory += int(requests.get("memory", "0Mi").replace("Mi", ""))
-        total_limits_memory += int(limits.get("memory", "0Mi").replace("Mi", ""))
+            if (
+                not deployment_yaml
+                or "spec" not in deployment_yaml
+                or "template" not in deployment_yaml["spec"]
+            ):
+                logger.error(f"Deployment {deployment} does not have valid spec.")
+                sys.exit(1)
 
-    logger.info(
-        f"Deployment {gateway_id} in namespace {namespace} has {replicas} replicas requires:\n"
-        f"                                  Requests: {total_requests_cpu * replicas}m CPU, {total_requests_memory * replicas}Mi Memory\n"
-        f"                                  Limits: {total_limits_cpu * replicas}m CPU, {total_limits_memory * replicas}Mi Memory"
-    )
+            containers = deployment_yaml["spec"]["template"]["spec"].get("containers", [])
+
+            total_requests_cpu = 0
+            total_limits_cpu = 0
+            total_requests_memory = 0
+            total_limits_memory = 0
+
+            for container in containers:
+                resources = container.get("resources", {})
+                requests = resources.get("requests", {})
+                limits = resources.get("limits", {})
+                replicas = deployment_yaml["spec"].get("replicas", 1)
+
+                total_requests_cpu += int(requests.get("cpu", 0).replace("m", ""))
+                total_limits_cpu += int(limits.get("cpu", 0).replace("m", ""))
+                total_requests_memory += int(
+                    requests.get("memory", "0Mi").replace("Mi", "")
+                )
+                total_limits_memory += int(
+                    limits.get("memory", "0Mi").replace("Mi", "")
+                )
+
+            logger.info(
+                f"Deployment {deployment} in namespace {namespace} has {replicas} replicas requires:"
+            )
+            logger.info(
+                f"Requests: {total_requests_cpu * replicas}m CPU, {total_requests_memory * replicas}Mi Memory"
+            )
+            logger.info(
+                f"Limits: {total_limits_cpu * replicas}m CPU, {total_limits_memory * replicas}Mi Memory"
+            )
 
 
 def check_deployment(namespace, gateway_id):
@@ -137,6 +165,7 @@ def check_deployment(namespace, gateway_id):
         )
         return False
     return True
+
 
 def check_namespace(namespace):
 
@@ -196,19 +225,21 @@ def main():
     for gateway_type in gateway_list:
         if gateway_type in ["additionalIngress"]:
             for gateway_id in smcp["spec"]["gateways"][gateway_type]:
-                namespace = smcp["spec"]["gateways"][gateway_type][gateway_id]["namespace"]
+                namespace = smcp["spec"]["gateways"][gateway_type][gateway_id][
+                    "namespace"
+                ]
 
                 logger.newline()
                 # Check if namespace exists
                 if check_namespace(namespace):
-                    # Check if deployment exists
-                    ingress_deployment = gateway_id
-                    egress_deployment = ingress_deployment.replace("ig", "eg")
-                    for deployment in [ingress_deployment, egress_deployment]:
-                        if check_deployment(namespace, deployment):
-                            calculate_deployment_resources(namespace, deployment)
-                            calculate_quota_resources(namespace, deployment)
+                    # Calculate deployment compute resources
+                    calculate_deployment_resources(namespace, gateway_id)
+                    # Calculate namespace compute resources
+                    calculate_namespace_resources(namespace)
 
+                    logger.info(
+                        "====================================================================================="
+                    )
 
     logger.newline()
     logger.info(
