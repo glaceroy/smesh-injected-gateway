@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 """
-Filename      : check_quotas.py
+Filename      : update_quotas.py
 Author        : Aiyaz Khan
 Maintained by : Kyndryl Engineering
 Version       : 1.0
-Description   : This script evaluates if there is enough compute resources available
-                in the namespaces resource quota to deploy injected.
+Description   : This script will increase the resource quota memory and CPU by 1Gi and 1 Core respectively for the smesh namespace of the injected gateway.
 """
 
 import logging
@@ -34,7 +33,7 @@ def create_logger():
     # Create a handler
     sh = logging.StreamHandler(sys.stdout)
     handler = logging.FileHandler(
-        f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}_check_quotas.py.log",
+        f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}_update_quotas.log",
         mode="w",
         encoding="utf-8",
     )
@@ -67,10 +66,10 @@ def patch_namespace_quota(namespace, quota_resource, value):
     quota_name = f"{namespace}-quota"
 
     logger.info(
-        f"Patching namespace {namespace} quota {quota_name} to allow additional resources."
+        f"Patching resource quota for namespace {namespace} with {quota_resource} = {value}"
     )
-
-    subprocess.run(
+    # Patch the resource quota for the namespace
+    output = subprocess.run(
         [
             "oc",
             "patch",
@@ -78,11 +77,14 @@ def patch_namespace_quota(namespace, quota_resource, value):
             quota_name,
             "-n",
             namespace,
-            "--type=json",
+            "--type=merge",
             "-p",
-            '[{"op": "add", "path": "/spec/hard/{quota_resource}", "value": "{value}"}]',
-        ]
+            f'{{"spec": {{"hard": {{"{quota_resource}": "{value}"}}}}}}',
+        ],
+        capture_output=True,
+        text=True,
     )
+
 
 def calculate_namespace_resources(namespace):
 
@@ -95,90 +97,72 @@ def calculate_namespace_resources(namespace):
     )
     quota = yaml.safe_load(output.stdout)
 
-    total_requests_cpu = quota["status"]["hard"].get("requests.cpu")
-    total_requests_memory = quota["status"]["hard"].get("requests.memory")
-    total_limits_cpu = quota["status"]["hard"].get("limits.cpu")
-    total_limits_memory = quota["status"]["hard"].get("limits.memory")
+    requests_cpu = quota["status"]["hard"].get("requests.cpu")
+    if isinstance(requests_cpu, str):
+        requests_cpu = int(requests_cpu)
 
-    logger.info(f"TOTAL Resource quota:")
-    logger.info(f"Total Requests CPU: {total_requests_cpu} CPU")
-    logger.info(f"Total Requests Mem: {total_requests_memory} Memory")
-    logger.info(f"Total Limits CPU: {total_limits_cpu} CPU")
-    logger.info(f"Total Limits Mem: {total_limits_memory} Memory")
+    requests_memory = quota["status"]["hard"].get("requests.memory")
+    if isinstance(requests_memory, str):
+        requests_memory_unit = requests_memory[-2:]
+        # We strip the unit and convert to int
+        requests_memory = int(requests_memory.replace(requests_memory_unit, ""))
 
+    limits_cpu = quota["status"]["hard"].get("limits.cpu")
+    if isinstance(limits_cpu, str):
+        limits_cpu = int(limits_cpu)
 
-def calculate_deployment_resources(namespace, gateway_id):
+    limits_memory = quota["status"]["hard"].get("limits.memory")
+    if isinstance(limits_memory, str):
+        limits_memory_unit = limits_memory[-2:]
+        # We strip the unit and convert to int
+        limits_memory = int(limits_memory.replace(limits_memory_unit, ""))
 
-    ingress_deployment = gateway_id
-    egress_deployment = gateway_id.replace("ig", "eg")
-    for deployment in [ingress_deployment, egress_deployment]:
-        if check_deployment(namespace, deployment):
-            # Get the deployment's resource requests and limits.
-            output = subprocess.run(
-                ["oc", "get", "deployment", deployment, "-n", namespace, "-o", "yaml"],
-                capture_output=True,
-                text=True,
-            )
-            deployment_yaml = yaml.safe_load(output.stdout)
+    if requests_memory_unit and limits_memory_unit in ["Gi"]:
+        logger.newline()
+        logger.info(f"Current Quota Values:")
+        logger.info(f"Requests CPU: {requests_cpu} CPU")
+        logger.info(f"Requests Mem: {requests_memory}{requests_memory_unit} Memory")
+        logger.info(f"Limits CPU: {limits_cpu} CPU")
+        logger.info(f"Limits Mem: {limits_memory}{limits_memory_unit} Memory")
 
-            if (
-                not deployment_yaml
-                or "spec" not in deployment_yaml
-                or "template" not in deployment_yaml["spec"]
-            ):
-                logger.error(f"Deployment {deployment} does not have valid spec.")
-                sys.exit(1)
+        requests_cpu = (
+            requests_cpu + 1
+        )  # Incrementing by 1 Core for the injected gateway
+        requests_memory = (
+            requests_memory + 1
+        )  # Incrementing by 1Gi for the injected gateway
+        limits_cpu = limits_cpu + 1  # Incrementing by 1 for the injected gateway
+        limits_memory = (
+            limits_memory + 1
+        )  # Incrementing by 1Gi for the injected gateway
 
-            containers = deployment_yaml["spec"]["template"]["spec"].get(
-                "containers", []
-            )
+        logger.newline()
 
-            total_requests_cpu = 0
-            total_limits_cpu = 0
-            total_requests_memory = 0
-            total_limits_memory = 0
+        resources = {
+            "limits.cpu": limits_cpu,
+            "limits.memory": str(limits_memory) + limits_memory_unit,
+            "requests.cpu": requests_cpu,
+            "requests.memory": str(requests_memory) + requests_memory_unit,
+        }
 
-            for container in containers:
-                resources = container.get("resources", {})
-                requests = resources.get("requests", {})
-                limits = resources.get("limits", {})
-                replicas = deployment_yaml["spec"].get("replicas", 1)
+        for resource, value in resources.items():
+            patch_namespace_quota(namespace, resource, value)
 
-                total_requests_cpu += int(requests.get("cpu", 0).replace("m", ""))
-                total_limits_cpu += int(limits.get("cpu", 0).replace("m", ""))
-                total_requests_memory += int(
-                    requests.get("memory", "0Mi").replace("Mi", "")
-                )
-                total_limits_memory += int(
-                    limits.get("memory", "0Mi").replace("Mi", "")
-                )
+        logger.newline()
+        logger.info(f"Updated Quota Values:")
+        logger.info(f"Requests CPU: {requests_cpu} CPU")
+        logger.info(f"Requests Mem: {requests_memory}{requests_memory_unit} Memory")
+        logger.info(f"Limits CPU: {limits_cpu} CPU")
+        logger.info(f"Limits Mem: {limits_memory}{limits_memory_unit} Memory")
 
-
-            logger.info(
-                f"Deployment {deployment} in namespace {namespace} has {replicas} replicas requires:"
-            )
-            logger.info(
-                f"Requests: {total_requests_cpu * replicas}m CPU, {total_requests_memory * replicas}Mi Memory"
-            )
-            logger.info(
-                f"Limits: {total_limits_cpu * replicas}m CPU, {total_limits_memory * replicas}Mi Memory"
-            )
-
-
-def check_deployment(namespace, gateway_id):
-
-    # Check if a deployment exists in a given namespace.
-    output = subprocess.run(
-        ["oc", "get", "deployment", gateway_id, "-n", namespace],
-        capture_output=True,
-        text=True,
-    )
-    if output.returncode != 0:
+        logger.newline()
+        logger.info(f"Resource quota for namespace {namespace} has been updated.")
+    else:
+        logger.warning(f"Hard Memory units for requests and limits not in Gi.")
         logger.warning(
-            f"Deployment {gateway_id} does not exist in namespace {namespace}. Moving on!"
+            f"Result: Fail for namespace {namespace}. Manual intervention required to update the quota."
         )
-        return False
-    return True
+
 
 
 def check_namespace(namespace):
@@ -246,8 +230,7 @@ def main():
                 logger.newline()
                 # Check if namespace exists
                 if check_namespace(namespace):
-                    # Calculate deployment compute resources
-                    calculate_deployment_resources(namespace, gateway_id)
+                    calculate_namespace_resources(namespace)
 
                     logger.info(
                         "====================================================================================="
