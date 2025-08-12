@@ -79,7 +79,7 @@ def main():
 
     check_login()
 
-    # Read SMCP configuration from the OpenShift cluster.
+    # Read SMMR configuration from the OpenShift cluster.
     output = subprocess.run(
         [
             "oc",

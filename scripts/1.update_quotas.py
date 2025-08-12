@@ -99,6 +99,7 @@ def calculate_namespace_resources(namespace):
 
     requests_cpu = quota["status"]["hard"].get("requests.cpu")
     if isinstance(requests_cpu, str):
+        requests_cpu_unit = requests_cpu[-1:]
         requests_cpu = int(requests_cpu)
 
     requests_memory = quota["status"]["hard"].get("requests.memory")
@@ -109,6 +110,7 @@ def calculate_namespace_resources(namespace):
 
     limits_cpu = quota["status"]["hard"].get("limits.cpu")
     if isinstance(limits_cpu, str):
+        limits_cpu_unit = limits_cpu[-1:]
         limits_cpu = int(limits_cpu)
 
     limits_memory = quota["status"]["hard"].get("limits.memory")
@@ -117,7 +119,7 @@ def calculate_namespace_resources(namespace):
         # We strip the unit and convert to int
         limits_memory = int(limits_memory.replace(limits_memory_unit, ""))
 
-    if requests_memory_unit == "Gi" and limits_memory_unit == "Gi":
+    if requests_memory_unit == "Gi" and limits_memory_unit == "Gi" and requests_cpu_unit != "m" and limits_cpu_unit != "m":
 
         logger.newline()
         logger.info(f"Current Quota Values:")
@@ -158,12 +160,14 @@ def calculate_namespace_resources(namespace):
 
         logger.newline()
         logger.info(f"Result: Success for namespace {namespace}. Resource Quota has been updated.")
+        logger.newline()
     else:
         logger.newline()
-        logger.warning(f"Hard Memory units for requests and limits not in Gi.")
+        logger.warning(f"Resource quotas not in Gi or Core")
         logger.warning(
             f"Result: Fail for namespace {namespace}. Manual intervention required to update the quota."
         )
+        logger.newline()
 
 
 
@@ -200,13 +204,13 @@ def main():
 
     check_login()
 
-    # Read SMCP configuration from the OpenShift cluster.
+    # Read SMMR configuration from the OpenShift cluster.
     output = subprocess.run(
         [
             "oc",
             "get",
-            "smcp",
-            "app-mesh-01",
+            "smmr",
+            "default",
             "-n",
             "istio-system",
             "-o",
@@ -214,31 +218,24 @@ def main():
         ],
         capture_output=True,
     )
-    smcp = yaml.safe_load(output.stdout)
+    smmr = yaml.safe_load(output.stdout)
 
     logger.info(
         "============================   Starting Script Execution.  ============================"
     )
 
-    gateway_list = smcp["spec"]["gateways"]
+    members_list = smmr["spec"]["members"]
 
-    for gateway_type in gateway_list:
-        if gateway_type in ["additionalIngress"]:
-            for gateway_id in smcp["spec"]["gateways"][gateway_type]:
-                namespace = smcp["spec"]["gateways"][gateway_type][gateway_id][
-                    "namespace"
-                ]
+    for members in members_list:
+        # Check if namespace exists
+        if check_namespace(members):
+            # Calculate the current resource quotas for the namespace
+            calculate_namespace_resources(members)
 
-                logger.newline()
-                # Check if namespace exists
-                if check_namespace(namespace):
-                    calculate_namespace_resources(namespace)
-
-                    logger.info(
+            logger.info(
                         "====================================================================================="
                     )
 
-    logger.newline()
     logger.info(
         "============================   Script Execution Completed.   ============================"
     )
