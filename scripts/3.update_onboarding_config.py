@@ -98,10 +98,11 @@ def main():
             if ns == namespace["namespace"]:
                 for index, key in enumerate(namespace):
                     if key == "egress":
-                        cluster_values["project"][ns_index]["egress"]["injected_egress"] = "true"
-
-                    elif key == "ingress":
-                        cluster_values["project"][ns_index]["ingress"]["injected_ingress"] = "true"
+                        if cluster_values["project"][ns_index]["egress"]["enabled"] == True:
+                            cluster_values["project"][ns_index]["egress"]["injected_egress"] = "true"
+                    elif key == "ingress":  
+                        if cluster_values["project"][ns_index]["ingress"]["enabled"] == True:   
+                            cluster_values["project"][ns_index]["ingress"]["injected_ingress"] = "true"
 
                 update_config_file(cluster_values)
 

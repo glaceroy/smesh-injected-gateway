@@ -62,6 +62,28 @@ def create_logger():
     return logger
 
 
+def patch_namespace_quota(namespace, quota_resource, value):
+
+    quota_name = f"{namespace}-quota"
+
+    logger.info(
+        f"Patching namespace {namespace} quota {quota_name} to allow additional resources."
+    )
+
+    subprocess.run(
+        [
+            "oc",
+            "patch",
+            "quota",
+            quota_name,
+            "-n",
+            namespace,
+            "--type=json",
+            "-p",
+            '[{"op": "add", "path": "/spec/hard/{quota_resource}", "value": "{value}"}]',
+        ]
+    )
+
 def calculate_namespace_resources(namespace):
 
     quota_name = f"{namespace}-quota"
@@ -84,20 +106,9 @@ def calculate_namespace_resources(namespace):
     logger.info(f"Total Limits CPU: {total_limits_cpu} CPU")
     logger.info(f"Total Limits Mem: {total_limits_memory} Memory")
 
-    used_requests_cpu = quota["status"]["used"].get("requests.cpu")
-    used_requests_memory = quota["status"]["used"].get("requests.memory")
-    used_limits_cpu = quota["status"]["used"].get("limits.cpu")
-    used_limits_memory = quota["status"]["used"].get("limits.memory")
-
-    logger.info(f"USED Resource quota:")
-    logger.info(f"Used Requests CPU: {used_requests_cpu} CPU")
-    logger.info(f"Used Requests Mem: {used_requests_memory} Memory")
-    logger.info(f"Used Limits CPU: {used_limits_cpu} CPU")
-    logger.info(f"Used Limits Mem: {used_limits_memory} Memory")
-
 
 def calculate_deployment_resources(namespace, gateway_id):
-    
+
     ingress_deployment = gateway_id
     egress_deployment = gateway_id.replace("ig", "eg")
     for deployment in [ingress_deployment, egress_deployment]:
@@ -118,7 +129,9 @@ def calculate_deployment_resources(namespace, gateway_id):
                 logger.error(f"Deployment {deployment} does not have valid spec.")
                 sys.exit(1)
 
-            containers = deployment_yaml["spec"]["template"]["spec"].get("containers", [])
+            containers = deployment_yaml["spec"]["template"]["spec"].get(
+                "containers", []
+            )
 
             total_requests_cpu = 0
             total_limits_cpu = 0
@@ -139,6 +152,7 @@ def calculate_deployment_resources(namespace, gateway_id):
                 total_limits_memory += int(
                     limits.get("memory", "0Mi").replace("Mi", "")
                 )
+
 
             logger.info(
                 f"Deployment {deployment} in namespace {namespace} has {replicas} replicas requires:"
@@ -234,8 +248,6 @@ def main():
                 if check_namespace(namespace):
                     # Calculate deployment compute resources
                     calculate_deployment_resources(namespace, gateway_id)
-                    # Calculate namespace compute resources
-                    calculate_namespace_resources(namespace)
 
                     logger.info(
                         "====================================================================================="
