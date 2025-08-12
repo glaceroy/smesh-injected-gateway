@@ -1,0 +1,96 @@
+[2025-08-13 00:42:48]     INFO : ============================   Starting Script Execution.  ============================
+[2025-08-13 00:42:48]     INFO : Namespace lbg-ocp-engineering-100-lab exists.
+
+[2025-08-13 00:42:48]     INFO : Current Quota Values:
+[2025-08-13 00:42:48]     INFO : Requests CPU: 11 CPU
+[2025-08-13 00:42:48]     INFO : Requests Mem: 13Gi Memory
+[2025-08-13 00:42:48]     INFO : Limits CPU: 11 CPU
+[2025-08-13 00:42:48]     INFO : Limits Mem: 13Gi Memory
+
+[2025-08-13 00:42:48]     INFO : Patching resource quota for namespace lbg-ocp-engineering-100-lab with limits.cpu = 12
+[2025-08-13 00:42:49]     INFO : Patching resource quota for namespace lbg-ocp-engineering-100-lab with limits.memory = 14Gi
+[2025-08-13 00:42:49]     INFO : Patching resource quota for namespace lbg-ocp-engineering-100-lab with requests.cpu = 12
+[2025-08-13 00:42:49]     INFO : Patching resource quota for namespace lbg-ocp-engineering-100-lab with requests.memory = 14Gi
+
+[2025-08-13 00:42:50]     INFO : Updated Quota Values:
+[2025-08-13 00:42:50]     INFO : Requests CPU: 12 CPU
+[2025-08-13 00:42:50]     INFO : Requests Mem: 14Gi Memory
+[2025-08-13 00:42:50]     INFO : Limits CPU: 12 CPU
+[2025-08-13 00:42:50]     INFO : Limits Mem: 14Gi Memory
+
+[2025-08-13 00:42:50]     INFO : Result: Success for namespace lbg-ocp-engineering-100-lab. Resource Quota has been updated.
+
+[2025-08-13 00:42:50]     INFO : =====================================================================================
+[2025-08-13 00:42:50]     INFO : Namespace lbg-ocp-bookinfo-200-test exists.
+
+[2025-08-13 00:42:51]  WARNING : Resource quotas not defined in Gi or Core
+[2025-08-13 00:42:51]  WARNING : Result: Fail for namespace lbg-ocp-bookinfo-200-test. Manual intervention required to update the quota.
+
+[2025-08-13 00:42:51]     INFO : =====================================================================================
+[2025-08-13 00:42:51]     INFO : Namespace lbg-ocp-bookinfo-300-prod exists.
+
+[2025-08-13 00:42:51]     INFO : Current Quota Values:
+[2025-08-13 00:42:51]     INFO : Requests CPU: 10 CPU
+[2025-08-13 00:42:51]     INFO : Requests Mem: 12Gi Memory
+[2025-08-13 00:42:51]     INFO : Limits CPU: 10 CPU
+[2025-08-13 00:42:51]     INFO : Limits Mem: 12Gi Memory
+
+[2025-08-13 00:42:51]     INFO : Patching resource quota for namespace lbg-ocp-bookinfo-300-prod with limits.cpu = 11
+[2025-08-13 00:42:52]     INFO : Patching resource quota for namespace lbg-ocp-bookinfo-300-prod with limits.memory = 13Gi
+[2025-08-13 00:42:52]     INFO : Patching resource quota for namespace lbg-ocp-bookinfo-300-prod with requests.cpu = 11
+[2025-08-13 00:42:53]     INFO : Patching resource quota for namespace lbg-ocp-bookinfo-300-prod with requests.memory = 13Gi
+
+[2025-08-13 00:42:53]     INFO : Updated Quota Values:
+[2025-08-13 00:42:53]     INFO : Requests CPU: 11 CPU
+[2025-08-13 00:42:53]     INFO : Requests Mem: 13Gi Memory
+[2025-08-13 00:42:53]     INFO : Limits CPU: 11 CPU
+[2025-08-13 00:42:53]     INFO : Limits Mem: 13Gi Memory
+
+[2025-08-13 00:42:53]     INFO : Result: Success for namespace lbg-ocp-bookinfo-300-prod. Resource Quota has been updated.
+
+[2025-08-13 00:42:53]     INFO : =====================================================================================
+[2025-08-13 00:42:53]     INFO : Namespace lbg-ocp-injected-gw-400-lab exists.
+
+[2025-08-13 00:42:54]     INFO : Current Quota Values:
+[2025-08-13 00:42:54]     INFO : Requests CPU: 10 CPU
+[2025-08-13 00:42:54]     INFO : Requests Mem: 12Gi Memory
+[2025-08-13 00:42:54]     INFO : Limits CPU: 10 CPU
+[2025-08-13 00:42:54]     INFO : Limits Mem: 12Gi Memory
+
+[2025-08-13 00:42:54]     INFO : Patching resource quota for namespace lbg-ocp-injected-gw-400-lab with limits.cpu = 11
+[2025-08-13 00:42:54]     INFO : Patching resource quota for namespace lbg-ocp-injected-gw-400-lab with limits.memory = 13Gi
+[2025-08-13 00:42:54]     INFO : Patching resource quota for namespace lbg-ocp-injected-gw-400-lab with requests.cpu = 11
+[2025-08-13 00:42:55]     INFO : Patching resource quota for namespace lbg-ocp-injected-gw-400-lab with requests.memory = 13Gi
+
+[2025-08-13 00:42:55]     INFO : Updated Quota Values:
+[2025-08-13 00:42:55]     INFO : Requests CPU: 11 CPU
+[2025-08-13 00:42:55]     INFO : Requests Mem: 13Gi Memory
+[2025-08-13 00:42:55]     INFO : Limits CPU: 11 CPU
+[2025-08-13 00:42:55]     INFO : Limits Mem: 13Gi Memory
+
+[2025-08-13 00:42:55]     INFO : Result: Success for namespace lbg-ocp-injected-gw-400-lab. Resource Quota has been updated.
+
+[2025-08-13 00:42:55]     INFO : =====================================================================================
+[2025-08-13 00:42:56]     INFO : Namespace lbg-ocp-servicemesh-3-400-lab exists.
+
+[2025-08-13 00:42:56]     INFO : Current Quota Values:
+[2025-08-13 00:42:56]     INFO : Requests CPU: 10 CPU
+[2025-08-13 00:42:56]     INFO : Requests Mem: 12Gi Memory
+[2025-08-13 00:42:56]     INFO : Limits CPU: 10 CPU
+[2025-08-13 00:42:56]     INFO : Limits Mem: 12Gi Memory
+
+[2025-08-13 00:42:56]     INFO : Patching resource quota for namespace lbg-ocp-servicemesh-3-400-lab with limits.cpu = 11
+[2025-08-13 00:42:56]     INFO : Patching resource quota for namespace lbg-ocp-servicemesh-3-400-lab with limits.memory = 13Gi
+[2025-08-13 00:42:57]     INFO : Patching resource quota for namespace lbg-ocp-servicemesh-3-400-lab with requests.cpu = 11
+[2025-08-13 00:42:57]     INFO : Patching resource quota for namespace lbg-ocp-servicemesh-3-400-lab with requests.memory = 13Gi
+
+[2025-08-13 00:42:58]     INFO : Updated Quota Values:
+[2025-08-13 00:42:58]     INFO : Requests CPU: 11 CPU
+[2025-08-13 00:42:58]     INFO : Requests Mem: 13Gi Memory
+[2025-08-13 00:42:58]     INFO : Limits CPU: 11 CPU
+[2025-08-13 00:42:58]     INFO : Limits Mem: 13Gi Memory
+
+[2025-08-13 00:42:58]     INFO : Result: Success for namespace lbg-ocp-servicemesh-3-400-lab. Resource Quota has been updated.
+
+[2025-08-13 00:42:58]     INFO : =====================================================================================
+[2025-08-13 00:42:58]     INFO : ============================   Script Execution Completed.   ============================

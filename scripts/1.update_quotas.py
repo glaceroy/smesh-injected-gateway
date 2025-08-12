@@ -98,77 +98,88 @@ def calculate_namespace_resources(namespace):
     quota = yaml.safe_load(output.stdout)
 
     requests_cpu = quota["status"]["hard"].get("requests.cpu")
-    if isinstance(requests_cpu, str):
-        requests_cpu_unit = requests_cpu[-1:]
-        requests_cpu = int(requests_cpu)
+    requests_cpu_unit = requests_cpu[-1:]
 
     requests_memory = quota["status"]["hard"].get("requests.memory")
-    if isinstance(requests_memory, str):
-        requests_memory_unit = requests_memory[-2:]
-        # We strip the unit and convert to int
-        requests_memory = int(requests_memory.replace(requests_memory_unit, ""))
+    requests_memory_unit = requests_memory[-2:]
 
     limits_cpu = quota["status"]["hard"].get("limits.cpu")
-    if isinstance(limits_cpu, str):
-        limits_cpu_unit = limits_cpu[-1:]
-        limits_cpu = int(limits_cpu)
+    limits_cpu_unit = limits_cpu[-1:]
 
     limits_memory = quota["status"]["hard"].get("limits.memory")
-    if isinstance(limits_memory, str):
-        limits_memory_unit = limits_memory[-2:]
-        # We strip the unit and convert to int
-        limits_memory = int(limits_memory.replace(limits_memory_unit, ""))
+    limits_memory_unit = limits_memory[-2:]
 
-    if requests_memory_unit == "Gi" and limits_memory_unit == "Gi" and requests_cpu_unit != "m" and limits_cpu_unit != "m":
+    if (
+        requests_memory_unit == "Gi"
+        and limits_memory_unit == "Gi"
+        and requests_cpu_unit != "m"
+        and limits_cpu_unit != "m"
+    ):
 
-        logger.newline()
-        logger.info(f"Current Quota Values:")
-        logger.info(f"Requests CPU: {requests_cpu} CPU")
-        logger.info(f"Requests Mem: {requests_memory}{requests_memory_unit} Memory")
-        logger.info(f"Limits CPU: {limits_cpu} CPU")
-        logger.info(f"Limits Mem: {limits_memory}{limits_memory_unit} Memory")
+        if isinstance(requests_cpu, str):
+            requests_cpu = int(requests_cpu)
 
-        requests_cpu = (
-            requests_cpu + 1
-        )  # Incrementing by 1 Core for the injected gateway
-        requests_memory = (
-            requests_memory + 1
-        )  # Incrementing by 1Gi for the injected gateway
-        limits_cpu = limits_cpu + 1  # Incrementing by 1 for the injected gateway
-        limits_memory = (
-            limits_memory + 1
-        )  # Incrementing by 1Gi for the injected gateway
+        if isinstance(requests_memory, str):
+            # We strip the unit and convert to int
+            requests_memory = int(requests_memory.replace(requests_memory_unit, ""))
 
-        logger.newline()
+        if isinstance(limits_cpu, str):
+            limits_cpu = int(limits_cpu)
 
-        resources = {
-            "limits.cpu": limits_cpu,
-            "limits.memory": str(limits_memory) + limits_memory_unit,
-            "requests.cpu": requests_cpu,
-            "requests.memory": str(requests_memory) + requests_memory_unit,
-        }
+        if isinstance(limits_memory, str):
+            # We strip the unit and convert to int
+            limits_memory = int(limits_memory.replace(limits_memory_unit, ""))
 
-        for resource, value in resources.items():
-            patch_namespace_quota(namespace, resource, value)
+            logger.newline()
+            logger.info(f"Current Quota Values:")
+            logger.info(f"Requests CPU: {requests_cpu} CPU")
+            logger.info(f"Requests Mem: {requests_memory}{requests_memory_unit} Memory")
+            logger.info(f"Limits CPU: {limits_cpu} CPU")
+            logger.info(f"Limits Mem: {limits_memory}{limits_memory_unit} Memory")
 
-        logger.newline()
-        logger.info(f"Updated Quota Values:")
-        logger.info(f"Requests CPU: {requests_cpu} CPU")
-        logger.info(f"Requests Mem: {requests_memory}{requests_memory_unit} Memory")
-        logger.info(f"Limits CPU: {limits_cpu} CPU")
-        logger.info(f"Limits Mem: {limits_memory}{limits_memory_unit} Memory")
+            requests_cpu = (
+                requests_cpu + 1
+            )  # Incrementing by 1 Core for the injected gateway
+            requests_memory = (
+                requests_memory + 1
+            )  # Incrementing by 1Gi for the injected gateway
+            limits_cpu = limits_cpu + 1  # Incrementing by 1 for the injected gateway
+            limits_memory = (
+                limits_memory + 1
+            )  # Incrementing by 1Gi for the injected gateway
 
-        logger.newline()
-        logger.info(f"Result: Success for namespace {namespace}. Resource Quota has been updated.")
-        logger.newline()
+            logger.newline()
+
+            resources = {
+                "limits.cpu": limits_cpu,
+                "limits.memory": str(limits_memory) + limits_memory_unit,
+                "requests.cpu": requests_cpu,
+                "requests.memory": str(requests_memory) + requests_memory_unit,
+            }
+
+            for resource, value in resources.items():
+                patch_namespace_quota(namespace, resource, value)
+
+            logger.newline()
+            logger.info(f"Updated Quota Values:")
+            logger.info(f"Requests CPU: {requests_cpu} CPU")
+            logger.info(f"Requests Mem: {requests_memory}{requests_memory_unit} Memory")
+            logger.info(f"Limits CPU: {limits_cpu} CPU")
+            logger.info(f"Limits Mem: {limits_memory}{limits_memory_unit} Memory")
+
+            logger.newline()
+            logger.info(
+                f"Result: Success for namespace {namespace}. Resource Quota has been updated."
+            )
+            logger.newline()
+
     else:
         logger.newline()
-        logger.warning(f"Resource quotas not in Gi or Core")
+        logger.warning(f"Resource quotas not defined in Gi or Core")
         logger.warning(
             f"Result: Fail for namespace {namespace}. Manual intervention required to update the quota."
         )
         logger.newline()
-
 
 
 def check_namespace(namespace):
@@ -233,8 +244,8 @@ def main():
             calculate_namespace_resources(members)
 
             logger.info(
-                        "====================================================================================="
-                    )
+                "====================================================================================="
+            )
 
     logger.info(
         "============================   Script Execution Completed.   ============================"
