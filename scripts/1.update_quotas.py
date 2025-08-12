@@ -117,7 +117,8 @@ def calculate_namespace_resources(namespace):
         # We strip the unit and convert to int
         limits_memory = int(limits_memory.replace(limits_memory_unit, ""))
 
-    if requests_memory_unit and limits_memory_unit in ["Gi"]:
+    if requests_memory_unit == "Gi" and limits_memory_unit == "Gi":
+
         logger.newline()
         logger.info(f"Current Quota Values:")
         logger.info(f"Requests CPU: {requests_cpu} CPU")
@@ -156,8 +157,9 @@ def calculate_namespace_resources(namespace):
         logger.info(f"Limits Mem: {limits_memory}{limits_memory_unit} Memory")
 
         logger.newline()
-        logger.info(f"Resource quota for namespace {namespace} has been updated.")
+        logger.info(f"Result: Success for namespace {namespace}. Resource Quota has been updated.")
     else:
+        logger.newline()
         logger.warning(f"Hard Memory units for requests and limits not in Gi.")
         logger.warning(
             f"Result: Fail for namespace {namespace}. Manual intervention required to update the quota."
