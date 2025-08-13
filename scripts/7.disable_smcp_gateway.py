@@ -7,6 +7,7 @@ Version       : 1.0
 Description   : This script disables smcp gateway by setting enabled: false in the servicemesh control plane configuration.
 """
 
+import argparse
 import json
 import logging
 import subprocess
@@ -74,27 +75,40 @@ def patch_smcp(gateway_type, gateway_id):
     # Convert patch_data to a JSON string
     json_patch = json.dumps(patch_data)
 
-    # Patch the SMCP configuration to disable the gateways.
-    output = subprocess.run(
-        [
-            "oc",
-            "patch",
-            "smcp",
-            "app-mesh-01",
-            "-n",
-            "istio-system",
-            "--type=json",
-            f"-p={json_patch}",
-        ],
-        capture_output=True,
-    )
-
-    if output.returncode != 0:
-        logger.error("Failed to patch SMCP: %s", output.stderr.decode())
-        sys.exit(1)
-    else:
-        logger.info("Successfully patched smcp: %s", patch_data)
+    if dry_run:
+        logger.info(
+            f"DRY RUN: Would patch SMCP to disable {gateway_type} gateway {gateway_id} with data: {json_patch}"
+        )
+        output = subprocess.CompletedProcess(
+            args=[],
+            returncode=0,
+            stdout=f"oc patch smcp app-mesh-01 -n istio-system --type=json -p='{json_patch}'",
+            stderr="",  
+        )
+        logger.info(f"DRY RUN Command: {output.stdout}")
         logger.newline()
+    else:
+        # Patch the SMCP configuration to disable the gateways.
+        output = subprocess.run(
+            [
+                "oc",
+                "patch",
+                "smcp",
+                "app-mesh-01",
+                "-n",
+                "istio-system",
+                "--type=json",
+                f"-p={json_patch}",
+            ],
+            capture_output=True,
+        )
+
+        if output.returncode != 0:
+            logger.error("Failed to patch SMCP: %s", output.stderr.decode())
+            sys.exit(1)
+        else:
+            logger.info("Successfully patched smcp: %s", patch_data)
+            logger.newline()
 
 
 def check_login():
@@ -144,11 +158,9 @@ def main():
                 namespace = smcp["spec"]["gateways"][gateway_type][gateway_id][
                     "namespace"
                 ]
-
                 logger.info(
                     "Disabling SMCP gateway: %s in namespace: %s", gateway_id, namespace
                 )
-
                 patch_smcp(gateway_type, gateway_id)
 
     logger.info(
@@ -159,4 +171,27 @@ def main():
 if __name__ == "__main__":
     # Set global logger
     logger = create_logger()
+
+    parser = argparse.ArgumentParser("disable_smcp_gateway")
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Run the script in dry run mode without making any changes.",
+    )
+    parser.add_argument(
+        "--execute",
+        action="store_true",
+        help="Run the script in execution mode and make changes.",
+    )
+
+    if len(sys.argv) != 2:
+        logger.info("USAGE: python disable_smcp_gateway.py --dry-run (OR) --execute")
+        logger.error("Please provide the relevant input to run.")
+        sys.exit(1)  # Exit with error status
+
+    args = parser.parse_args()
+    dry_run = args.dry_run
+    if dry_run:
+        logger.info("Running in DRY RUN MODE. No changes will be made.")
+
     main()
