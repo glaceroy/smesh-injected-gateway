@@ -7,6 +7,7 @@ Version       : 1.0
 Description   : This script removes the ownership labels in a service.
 """
 
+import argparse
 import logging
 import subprocess
 import sys
@@ -14,7 +15,6 @@ import types
 from datetime import datetime
 
 import yaml
-
 
 def log_newline(self, how_many_lines=1):
 
@@ -63,31 +63,43 @@ def create_logger():
 
 def remove_service_labels(namespace, service):
 
-    # Remove specific labels from a service in the given namespace.
-
-    output = subprocess.run(
-        [
-            "oc",
-            "label",
-            "svc",
-            service,
-            "-n",
-            namespace,
-            "--overwrite",
-            "app.kubernetes.io/managed-by-",
-        ],
-        capture_output=True,
-        text=True,
-    )
-    if output.returncode != 0:
-        logger.error(
-            f"Failed to remove labels from service {service} in namespace {namespace}: {output.stderr}"
-        )
-        sys.exit(1)
-    else:
+    # If dry run is enabled, just log the action and return.
+    if dry_run:
         logger.info(
-            f"SMESH Management Labels removed from service {service} in namespace {namespace}"
+            f"DRY RUN: Would remove labels from service {service} in namespace {namespace}"
         )
+        # Simulate the command output for dry run
+        output = subprocess.CompletedProcess(
+            args=[],
+            returncode=0,
+            stdout=f"oc label svc {service} -n {namespace} --overwrite app.kubernetes.io/managed-by-",
+        )
+        logger.info(f"DRY RUN Command: {output.stdout}")
+    else:
+        # Remove specific labels from a service in the given namespace.
+        output = subprocess.run(
+            [
+                "oc",
+                "label",
+                "svc",
+                service,
+                "-n",
+                namespace,
+                "--overwrite",
+                "app.kubernetes.io/managed-by-",
+            ],
+            capture_output=True,
+            text=True,
+        )
+        if output.returncode != 0:
+            logger.error(
+                f"Failed to remove labels from service {service} in namespace {namespace}: {output.stderr}"
+            )
+            sys.exit(1)
+        else:
+            logger.info(
+                f"SMESH Management Labels removed from service {service} in namespace {namespace}"
+            )
 
 
 def check_service_exists(namespace, service):
@@ -190,4 +202,27 @@ def main():
 if __name__ == "__main__":
     # Set global logger
     logger = create_logger()
+
+    parser = argparse.ArgumentParser("remove_service_labels")
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Run the script in dry run mode without making any changes.",
+    )
+    parser.add_argument(
+        "--execute",
+        action="store_true",
+        help="Run the script in execution mode and make changes.",
+    )
+
+    if len(sys.argv) != 2:
+        logger.info("USAGE: python remove_service_labels.py --dry-run (OR) --execute")
+        logger.error("Please provide the relevant input to run.")
+        sys.exit(1)  # Exit with error status
+
+    args = parser.parse_args()
+    dry_run = args.dry_run
+    if dry_run:
+        logger.info("Running in DRY RUN MODE. No changes will be made.")
+
     main()

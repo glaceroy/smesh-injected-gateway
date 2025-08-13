@@ -7,6 +7,7 @@ Version       : 1.0
 Description   : This script updates the number of replicas for injected gateways based on the servicemesh control plane gateway replicas for a given namespace.
 """
 
+import argparse
 import logging
 import subprocess
 import sys
@@ -63,30 +64,42 @@ def create_logger():
 
 def set_replicas(namespace, replicas, gateway):
 
-    # Set the expected number of replicas for a given gateway.
-    output = subprocess.run(
-        [
-            "oc",
-            "scale",
-            "deployment",
-            gateway,
-            "--replicas",
-            str(replicas),
-            "-n",
-            namespace,
-        ],
-        capture_output=True,
-        text=True,
-    )
-    if output.returncode != 0:
-        logger.error(
-            f"Failed to scale deployment in namespace {namespace}: {output.stderr}"
+    # If dry run is enabled, just log the action and return.
+    if dry_run:
+        logger.info(
+            f"DRY RUN: Would set {gateway} replicas to {replicas} in namespace {namespace}"
         )
-        sys.exit(1)
+        output = subprocess.CompletedProcess(
+            args=[],
+            returncode=0,
+            stdout=f"oc scale deployment {gateway} --replicas {replicas} -n {namespace}",
+        )
+        logger.info(f"DRY RUN Command: {output.stdout}")
+    else:
+        # Set the expected number of replicas for a given gateway.
+        output = subprocess.run(
+            [
+                "oc",
+                "scale",
+                "deployment",
+                gateway,
+                "--replicas",
+                str(replicas),
+                "-n",
+                namespace,
+            ],
+            capture_output=True,
+            text=True,
+        )
+        if output.returncode != 0:
+            logger.error(
+                f"Failed to scale deployment in namespace {namespace}: {output.stderr}"
+            )
+            sys.exit(1)
 
-    logger.info(
-        f"Scaled deployment {gateway} to {replicas} replicas"
-    )
+        logger.info(
+            f"Scaled deployment {gateway} to {replicas} replicas"
+        )
 
 
 def get_replicas(namespace, gateway_id):
@@ -208,16 +221,11 @@ def main():
                     if check_deployment(namespace, gateway_id):
                         # Get current replicas
                         current_replicas = get_replicas(namespace, gateway_id)
-
-                        if gateway_type == "additionalIngress":
-                            gateway_name = "injected-gateway-ingress"
-                        else:
-                            gateway_name = "injected-gateway-egress"
-
-                        if check_deployment(namespace, gateway_name):
+                        injected_gateway_name = f"{gateway_id}-gateway"
+                        if check_deployment(namespace, injected_gateway_name):
                             # Set expected replicas
                             set_replicas(
-                                namespace, current_replicas, gateway_name
+                                namespace, current_replicas, injected_gateway_name
                             )
 
     logger.newline()
@@ -229,4 +237,27 @@ def main():
 if __name__ == "__main__":
     # Set global logger
     logger = create_logger()
+
+    parser = argparse.ArgumentParser("update_injected_gateway_replicas")
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Run the script in dry run mode without making any changes.",
+    )
+    parser.add_argument(
+        "--execute",
+        action="store_true",
+        help="Run the script in execution mode and make changes.",
+    )
+
+    if len(sys.argv) != 2:
+        logger.info("USAGE: python update_injected_gateway_replicas.py --dry-run (OR) --execute")
+        logger.error("Please provide the relevant input to run.")
+        sys.exit(1)  # Exit with error status
+
+    args = parser.parse_args()
+    dry_run = args.dry_run
+    if dry_run:
+        logger.info("Running in DRY RUN MODE. No changes will be made.")
+
     main()

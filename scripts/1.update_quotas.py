@@ -7,6 +7,7 @@ Version       : 1.0
 Description   : This script will increase the resource quota memory and CPU by 1Gi and 1 Core respectively for the smesh namespace of the injected gateway.
 """
 
+import argparse
 import logging
 import subprocess
 import sys
@@ -65,25 +66,40 @@ def patch_namespace_quota(namespace, quota_resource, value):
 
     quota_name = f"{namespace}-quota"
 
-    logger.info(
-        f"Patching resource quota for namespace {namespace} with {quota_resource} = {value}"
-    )
-    # Patch the resource quota for the namespace
-    output = subprocess.run(
-        [
-            "oc",
-            "patch",
-            "quota",
-            quota_name,
-            "-n",
-            namespace,
-            "--type=merge",
-            "-p",
-            f'{{"spec": {{"hard": {{"{quota_resource}": "{value}"}}}}}}',
-        ],
-        capture_output=True,
-        text=True,
-    )
+    if dry_run:
+        logger.info(
+            f"DRY RUN: Would patch resource quota for namespace {namespace} with {quota_resource} = {value}"
+        )
+        # Simulate the patching action without executing it
+        output = subprocess.CompletedProcess(
+            args=[],
+            returncode=0,
+            stdout=f'oc patch quota {quota_name} -n {namespace} --type=merge -p \'{{"spec": {{"hard": {{"{quota_resource}": "{value}"}}}}}}\'',
+            stderr="",
+        )
+        # Log the dry run output
+        logger.info(f"DRY RUN Command: {output.stdout}")
+    else:
+        # Log the action of patching the resource quota
+        logger.info(
+            f"Patching resource quota for namespace {namespace} with {quota_resource} = {value}"
+        )
+        # Patch the resource quota for the namespace
+        output = subprocess.run(
+            [
+                "oc",
+                "patch",
+                "quota",
+                quota_name,
+                "-n",
+                namespace,
+                "--type=merge",
+                "-p",
+                f'{{"spec": {{"hard": {{"{quota_resource}": "{value}"}}}}}}',
+            ],
+            capture_output=True,
+            text=True,
+        )
 
 
 def calculate_namespace_resources(namespace):
@@ -167,11 +183,13 @@ def calculate_namespace_resources(namespace):
             logger.info(f"Limits CPU: {limits_cpu} CPU")
             logger.info(f"Limits Mem: {limits_memory}{limits_memory_unit} Memory")
 
-            logger.newline()
-            logger.info(
-                f"Result: Success for namespace {namespace}. Resource Quota has been updated."
-            )
-            logger.newline()
+            if not dry_run:
+                # Log the successful patching of the resource quota
+                logger.newline()
+                logger.info(
+                    f"Resource Quota for namespace {namespace} has been updated successfully."
+                )
+                logger.newline()
 
     else:
         logger.newline()
@@ -255,4 +273,27 @@ def main():
 if __name__ == "__main__":
     # Set global logger
     logger = create_logger()
+
+    parser = argparse.ArgumentParser("update_quotas")
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Run the script in dry run mode without making any changes.",
+    )
+    parser.add_argument(
+        "--execute",
+        action="store_true",
+        help="Run the script in execution mode and make changes.",
+    )
+
+    if len(sys.argv) != 2:
+        logger.info("USAGE: python update_quotas.py --dry-run (OR) --execute")
+        logger.error("Please provide the relevant input to run.")
+        sys.exit(1)  # Exit with error status
+
+    args = parser.parse_args()
+    dry_run = args.dry_run
+    if dry_run:
+        logger.info("Running in DRY RUN MODE. No changes will be made.")
+
     main()
