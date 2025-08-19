@@ -111,7 +111,7 @@ if __name__ == "__main__":
         "--cluster_prefix",
         required=True,
         type=str,
-        help="Specify the args.operand to increase or decrease the quotas.",
+        help="Specify the cluster prefix for the folder name. Example rk-dt or pb-gen-preprod.",
     )
     if len(sys.argv) != 3:
         logger.info("USAGE: python setup_script.py --c <cluster_prefix>")
