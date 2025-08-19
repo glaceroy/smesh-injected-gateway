@@ -60,6 +60,33 @@ def create_logger():
 
     return logger
 
+def validate_label_removal(namespace, service):
+    
+    # Validate that the labels have been removed from the service.
+    output = subprocess.run(
+        ["oc", "get", "svc", service, "-n", namespace, "-o", "yaml"],
+        capture_output=True,
+        text=True,
+    )
+    if output.returncode != 0:
+        logger.error(
+            f"Failed to get service {service} in namespace {namespace}: {output.stderr}"
+        )
+        sys.exit(1)
+
+    service_data = yaml.safe_load(output.stdout)
+    labels = service_data.get("metadata", {}).get("labels", {})
+
+    if "app.kubernetes.io/managed-by" not in labels:
+        logger.info(
+            f"Validation Complete - SMCP OWnership Label successfully removed from service {service} in namespace {namespace}"
+        )
+    else:
+        logger.error(
+            f"SMCP OWnership Label still present on service {service} in namespace {namespace}"
+        )
+    
+    logger.newline()
 
 def remove_service_labels(namespace, service):
 
@@ -93,12 +120,12 @@ def remove_service_labels(namespace, service):
         )
         if output.returncode != 0:
             logger.error(
-                f"Failed to remove labels from service {service} in namespace {namespace}: {output.stderr}"
+                f"Failed to remove SMCP Ownership label from service {service} in namespace {namespace}: {output.stderr}"
             )
             sys.exit(1)
         else:
             logger.info(
-                f"SMESH Management Labels removed from service {service} in namespace {namespace}"
+                f"SMCP OWnership Label removed from service {service} in namespace {namespace}"
             )
 
 
@@ -192,6 +219,11 @@ def main():
                     if check_service_exists(namespace, gateway_id):
                         # Remove service labels
                         remove_service_labels(namespace, gateway_id)
+                        validate_label_removal(namespace, gateway_id)
+
+                        logger.info(
+                "====================================================================================="
+            )
 
     logger.newline()
     logger.info(

@@ -154,14 +154,14 @@ def calculate_namespace_resources(namespace):
             logger.info(f"Limits Mem: {limits_memory}{limits_memory_unit} Memory")
 
             requests_cpu = (
-                requests_cpu + 1
+                requests_cpu + 2
             )  # Incrementing by 1 Core for the injected gateway
             requests_memory = (
-                requests_memory + 1
+                requests_memory + 4
             )  # Incrementing by 1Gi for the injected gateway
-            limits_cpu = limits_cpu + 1  # Incrementing by 1 for the injected gateway
+            limits_cpu = limits_cpu + 2  # Incrementing by 1 for the injected gateway
             limits_memory = (
-                limits_memory + 1
+                limits_memory + 4
             )  # Incrementing by 1Gi for the injected gateway
 
             logger.newline()
