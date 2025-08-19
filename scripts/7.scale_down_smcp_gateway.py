@@ -189,6 +189,10 @@ def main():
                     if check_deployment(namespace, gateway_id):
                         scale_down_replicas(namespace, gateway_id)
 
+                        logger.info(
+                            "====================================================================================="
+                        )
+
     logger.newline()
     logger.info(
         "============================   Script Execution Completed.   ============================"

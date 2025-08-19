@@ -70,6 +70,11 @@ def update_config_file(cluster_values):
 
 def main():
 
+    logger.info(
+            "============================   Starting Script Execution.  ============================"
+    )
+    logger.newline()
+
     files = [file1, file2]
     # Check if the required files exist
     for file in files:
@@ -77,6 +82,7 @@ def main():
             logger.info(f"The required file {file} exists.")  
         else:
             logger.error(f"Required input file {file} does not exist. Exiting.. !")
+            logger.newline()
             sys.exit(1)
               
 
@@ -95,7 +101,9 @@ def main():
             logger.error("The cluster values file does not contain 'project' key. Exiting.. !")
             logger.error("Check the order of input files passed to the script. Exiting.. !")
             logger.info("USAGE: python update_onboarding_config.py <input_namespace.yaml> <cluster_values.yaml>")
+            logger.newline()
             sys.exit(1)
+
 
         for ns_index, namespace in enumerate(cluster_values["project"]):
             if ns == namespace["namespace"]:
@@ -110,6 +118,10 @@ def main():
                 update_config_file(cluster_values)
 
     logger.info("Cluster values config file is updated.. !")
+    logger.newline()
+    logger.info(
+        "============================   Script Execution Completed.   ============================"
+    )
 
 
 if __name__ == "__main__":

@@ -71,6 +71,11 @@ def update_config_file(cluster_values):
 
 def main():
 
+    logger.info(
+            "============================   Starting Script Execution.  ============================"
+    )
+    logger.newline()
+
     files = [file1, file2]
     # Check if the required files exist
     for file in files:
@@ -111,6 +116,10 @@ def main():
                 update_config_file(cluster_values)
 
     logger.info("Cluster values config file is updated.. !")
+    logger.newline()
+    logger.info(
+        "============================   Script Execution Completed.   ============================"
+    )
 
 
 if __name__ == "__main__":

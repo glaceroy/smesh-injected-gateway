@@ -163,6 +163,10 @@ def main():
                 )
                 patch_smcp(gateway_type, gateway_id)
 
+                logger.info(
+                    "====================================================================================="
+                )
+    logger.newline()
     logger.info(
         "============================   Script Execution Completed.   ============================"
     )

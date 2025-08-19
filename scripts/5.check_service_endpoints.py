@@ -37,7 +37,7 @@ def create_logger():
     # Create a handler
     sh = logging.StreamHandler(sys.stdout)
     handler = logging.FileHandler(
-        f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}_update_injected_gateway_replicas.log",
+        f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}_check_service_endpoints.log",
         mode="w",
         encoding="utf-8",
     )
@@ -215,6 +215,11 @@ def main():
                             pod_ip = get_pod_ip(label_selector, namespace)
                             # Check if the service endpoints are available
                             check_service_endpoints(gateway_id, namespace, pod_ip)
+                            
+                            logger.newline()
+                            logger.info(
+                                "====================================================================================="
+                            )
 
     logger.newline()
     logger.info(

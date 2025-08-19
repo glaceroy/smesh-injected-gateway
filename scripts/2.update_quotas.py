@@ -252,7 +252,7 @@ def main():
     logger.info(
         "============================   Starting Script Execution.  ============================"
     )
-
+    logger.newline()
     members_list = smmr["spec"]["members"]
 
     for members in members_list:
@@ -264,6 +264,7 @@ def main():
             logger.info(
                 "====================================================================================="
             )
+            logger.newline()
 
     logger.info(
         "============================   Script Execution Completed.   ============================"
