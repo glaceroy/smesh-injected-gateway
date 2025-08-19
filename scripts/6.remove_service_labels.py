@@ -16,6 +16,7 @@ from datetime import datetime
 
 import yaml
 
+
 def log_newline(self, how_many_lines=1):
 
     # Switch formatter, output a blank line
@@ -60,8 +61,9 @@ def create_logger():
 
     return logger
 
+
 def validate_label_removal(namespace, service):
-    
+
     # Validate that the labels have been removed from the service.
     output = subprocess.run(
         ["oc", "get", "svc", service, "-n", namespace, "-o", "yaml"],
@@ -85,8 +87,9 @@ def validate_label_removal(namespace, service):
         logger.error(
             f"SMCP OWnership Label still present on service {service} in namespace {namespace}"
         )
-    
+
     logger.newline()
+
 
 def remove_service_labels(namespace, service):
 
@@ -222,8 +225,8 @@ def main():
                         validate_label_removal(namespace, gateway_id)
 
                         logger.info(
-                "====================================================================================="
-            )
+                            "====================================================================================="
+                        )
 
     logger.newline()
     logger.info(

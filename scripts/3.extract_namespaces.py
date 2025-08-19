@@ -104,7 +104,7 @@ def main():
     members_list = smmr["spec"]["members"]
 
     with open("input_namespace.yaml", "w") as file:
-      yaml.dump(members_list, file)
+        yaml.dump(members_list, file)
 
     logger.info("Namespaces extracted and saved to input_namespace.yaml")
 

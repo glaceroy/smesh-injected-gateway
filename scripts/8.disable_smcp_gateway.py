@@ -83,7 +83,7 @@ def patch_smcp(gateway_type, gateway_id):
             args=[],
             returncode=0,
             stdout=f"oc patch smcp app-mesh-01 -n istio-system --type=json -p='{json_patch}'",
-            stderr="",  
+            stderr="",
         )
         logger.info(f"DRY RUN Command: {output.stdout}")
         logger.newline()

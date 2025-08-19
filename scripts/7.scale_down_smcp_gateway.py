@@ -100,9 +100,7 @@ def scale_down_replicas(namespace, gateway):
             )
             sys.exit(1)
 
-        logger.info(
-            f"Scaled deployment {gateway} to {replicas} replicas"
-        )
+        logger.info(f"Scaled deployment {gateway} to {replicas} replicas")
 
 
 def check_namespace(namespace):
@@ -180,7 +178,9 @@ def main():
     for gateway_type in gateway_list:
         if gateway_type in ["additionalEgress", "additionalIngress"]:
             for gateway_id in smcp["spec"]["gateways"][gateway_type]:
-                namespace = smcp["spec"]["gateways"][gateway_type][gateway_id]["namespace"]
+                namespace = smcp["spec"]["gateways"][gateway_type][gateway_id][
+                    "namespace"
+                ]
 
                 logger.newline()
                 # Check if namespace exists

@@ -64,7 +64,7 @@ def create_logger():
 def take_quota_backup(namespace):
 
     quota_name = f"{namespace}-quota"
-    
+
     # Take a backup of the resource quotas for the given namespace.
     output = subprocess.run(
         [
