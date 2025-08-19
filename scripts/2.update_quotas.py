@@ -9,6 +9,7 @@ Description   : This script will increase the resource quota memory and CPU by 1
 
 import argparse
 import logging
+import operator
 import subprocess
 import sys
 import types
@@ -104,6 +105,17 @@ def patch_namespace_quota(namespace, quota_resource, value):
 
 def calculate_namespace_resources(namespace):
 
+    update_cpu_unit = 2  # Increment CPU by 2 Core for the injected gateway
+    update_memory_unit = 4  # Increment Memory by 4Gi for the injected gateway
+
+    ops = {"increase": operator.add, "decrease": operator.sub}
+    if operand not in ops:
+        logger.error(
+            f"Invalid operand: {operand}. Please use 'increase' or 'decrease'."
+        )
+        sys.exit(1)
+    op_func = ops[operand]
+
     quota_name = f"{namespace}-quota"
     # Get the resource quota for the namespace.
     output = subprocess.run(
@@ -153,16 +165,10 @@ def calculate_namespace_resources(namespace):
             logger.info(f"Limits CPU: {limits_cpu} CPU")
             logger.info(f"Limits Mem: {limits_memory}{limits_memory_unit} Memory")
 
-            requests_cpu = (
-                requests_cpu + 2
-            )  # Incrementing by 1 Core for the injected gateway
-            requests_memory = (
-                requests_memory + 4
-            )  # Incrementing by 1Gi for the injected gateway
-            limits_cpu = limits_cpu + 2  # Incrementing by 1 for the injected gateway
-            limits_memory = (
-                limits_memory + 4
-            )  # Incrementing by 1Gi for the injected gateway
+            requests_cpu = op_func(requests_cpu, update_cpu_unit)
+            requests_memory = op_func(requests_memory, update_memory_unit)
+            limits_cpu = op_func(limits_cpu, update_cpu_unit)
+            limits_memory = op_func(limits_memory, update_memory_unit)
 
             logger.newline()
 
@@ -249,10 +255,15 @@ def main():
     )
     smmr = yaml.safe_load(output.stdout)
 
+    logger.info(f"Operand selected: {operand} Quotas")
+    logger.newline()
     logger.info(
         "============================   Starting Script Execution.  ============================"
     )
     logger.newline()
+    logger.info(f"Operand selected: {operand} Quotas")
+    logger.newline()
+
     members_list = smmr["spec"]["members"]
 
     for members in members_list:
@@ -286,14 +297,24 @@ if __name__ == "__main__":
         action="store_true",
         help="Run the script in execution mode and make changes.",
     )
+    parser.add_argument(
+        "--operand",
+        required=True,
+        type=str,
+        help="Specify the args.operand to increase or decrease the quotas.",
+    )
 
-    if len(sys.argv) != 2:
-        logger.info("USAGE: python update_quotas.py --dry-run (OR) --execute")
+    if len(sys.argv) != 4:
+        logger.info(
+            "USAGE: python update_quotas.py --dry-run (OR) --execute (AND) --operand increase/decrease"
+        )
         logger.error("Please provide the relevant input to run.")
         sys.exit(1)  # Exit with error status
 
     args = parser.parse_args()
     dry_run = args.dry_run
+    operand = args.operand
+
     if dry_run:
         logger.info("Running in DRY RUN MODE. No changes will be made.")
 
