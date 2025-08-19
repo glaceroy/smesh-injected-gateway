@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """
-Filename      : update_onboarding_config.py
+Filename      : update_cluster_values.py
 Author        : Aiyaz Khan
 Maintained by : Kyndryl Engineering
 Version       : 1.0
+Description   : This script will update the cluster values config file by disabling SMCP egress and ingress for namespaces listed in the input namespace yaml file.
 """
+
 
 import logging
 import sys
@@ -15,6 +17,8 @@ from pathlib import Path
 
 from ruamel.yaml import YAML
 yaml = YAML()
+yaml.width = sys.maxsize  # Set width to max size to avoid line breaks in YAML output
+yaml.preserve_quotes = True  # Preserve quotes in YAML output
 
 def log_newline(self, how_many_lines=1):
 
@@ -33,7 +37,7 @@ def create_logger():
     # Create a handler
     sh = logging.StreamHandler(sys.stdout)
     handler = logging.FileHandler(
-        f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}_update_onboarding_config.log",
+        f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}_update_cluster_values.log",
         mode="w",
         encoding="utf-8",
     )
@@ -99,10 +103,10 @@ def main():
                 for index, key in enumerate(namespace):
                     if key == "egress":
                         if cluster_values["project"][ns_index]["egress"]["enabled"] == True:
-                            cluster_values["project"][ns_index]["egress"]["injected_egress"] = "true"
+                            cluster_values["project"][ns_index]["egress"]["enabled"] = False
                     elif key == "ingress":  
                         if cluster_values["project"][ns_index]["ingress"]["enabled"] == True:   
-                            cluster_values["project"][ns_index]["ingress"]["injected_ingress"] = "true"
+                            cluster_values["project"][ns_index]["ingress"]["enabled"] = False
 
                 update_config_file(cluster_values)
 

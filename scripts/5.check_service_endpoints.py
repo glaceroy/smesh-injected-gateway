@@ -15,12 +15,10 @@ import subprocess
 import sys
 import types
 from datetime import datetime
+import os
 
 import yaml
 
-config.load_kube_config("/root/.kube/config")   # local kubeconfig path
-
-api = client.CoreV1Api() # Initialize the Kubernetes API client
 
 def log_newline(self, how_many_lines=1):
 
@@ -91,23 +89,47 @@ def check_service_endpoints(service_name, namespace, pod_ip):
             logger.warning(f"Service '{service_name}' in namespace '{namespace}' has no endpoints.")
             return False
         
-        for k, v in pod_ip.items():
-            if v not in [address.ip for subset in endpoints.subsets for address in subset.addresses]:
-                logger.warning(f"Pod '{k}' with IP '{v}' is not listed in the service '{service_name}' endpoints.")
-                return False
-            else:
-                logger.info(f"Pod '{k}' with IP '{v}' is listed in the service '{service_name}' endpoints.")
+        if endpoints.subsets[0].addresses:
+            logger.info(f"Service '{service_name}' in namespace '{namespace}' has endpoints.")
+            for k, v in pod_ip.items():
+                if v not in [address.ip for subset in endpoints.subsets for address in subset.addresses]:
+                    logger.warning(f"Pod '{k}' with IP '{v}' is not listed in the service '{service_name}' endpoints.")
+                    return False
+                else:
+                    logger.info(f"Pod '{k}' with IP '{v}' is listed in the service '{service_name}' endpoints.")
+                    return True
+        elif endpoints.subsets[0].not_ready_addresses:
+            logger.warning(f"Service '{service_name}' in namespace '{namespace}' has not ready addresses.")
+            for k, v in pod_ip.items():
+                if v in [address.ip for subset in endpoints.subsets for address in subset.not_ready_addresses]:
+                    logger.warning(f"Pod '{k}' with IP '{v}' is listed in the service '{service_name}' has not ready endpoints.")
+                    return False
+        else:
+            logger.warning(f"Service '{service_name}' in namespace '{namespace}' has no endpoints.")
+            return False
                 
-        for subset in endpoints.subsets:
-            for address in subset.addresses:
-                    logger.info(f"Service '{service_name}' in namespace '{namespace}' has endpoint: {address.ip}")
-        
         return True
     except kubernetes.client.rest.ApiException as e:
         logger.error(f"Error checking service '{service_name}' in namespace '{namespace}': {e}")
         return False
 
+def check_service_exists(namespace, service):
 
+    # Check if a service exists in the given namespace.
+
+    output = subprocess.run(
+        ["oc", "get", "svc", service, "-n", namespace],
+        capture_output=True,
+        text=True,
+    )
+    if output.returncode != 0:
+        logger.warning(f"Service {service} does not exist in namespace {namespace}.")
+        logger.newline()
+        return False
+    else:
+        logger.info(f"Service {service} exists in namespace {namespace}.")
+        return True
+    
 def check_namespace(namespace):
 
     # Check if a namespace exists.
@@ -121,7 +143,6 @@ def check_namespace(namespace):
         return False
     logger.info(f"Namespace {namespace} exists.")
     return True
-
 
 def check_deployment(namespace, gateway_id):
 
@@ -138,8 +159,7 @@ def check_deployment(namespace, gateway_id):
         return False
     logger.info(f"Deployment {gateway_id} exists in namespace {namespace}.")
     return True
-
-
+                            
 def check_login():
 
     # Check if the user is logged in to the OpenShift cluster.
@@ -153,10 +173,7 @@ def check_login():
         logger.error("UNAUTHORIZED...!! Please login to the cluster and try again... !")
         sys.exit(1)
 
-
 def main():
-
-    check_login()
 
     # Read SMCP configuration from the OpenShift cluster.
     output = subprocess.run(
@@ -191,12 +208,13 @@ def main():
                     # Check if deployment exists in the namespace
                     deployment_name = f"{gateway_id}-gateway"
                     if check_deployment(namespace, deployment_name):
-                        # Check if the pod IPs are available
-                        label_selector = f"app={gateway_id}"
-                        pod_ip = get_pod_ip(label_selector, namespace)
-                        # Check if the service endpoints are available
-                        service_name = f"{gateway_id}"
-                        check_service_endpoints(service_name, namespace, pod_ip)
+                        # Check if the service exists in the namespace
+                        if check_service_exists(namespace, gateway_id):
+                            # Check if the pod IPs are available
+                            label_selector = f"app={gateway_id}"
+                            pod_ip = get_pod_ip(label_selector, namespace)
+                            # Check if the service endpoints are available
+                            check_service_endpoints(gateway_id, namespace, pod_ip)
 
     logger.newline()
     logger.info(
@@ -208,26 +226,37 @@ if __name__ == "__main__":
     # Set global logger
     logger = create_logger()
 
-    parser = argparse.ArgumentParser("update_injected_gateway_replicas")
-    parser.add_argument(
-        "--dry-run",
-        action="store_true",
-        help="Run the script in dry run mode without making any changes.",
+    check_login()
+
+    # Configure the Kubernetes client to connect to the OpenShift cluster.
+    output = subprocess.run(
+        ["oc", "whoami", "-t"],
+        capture_output=True,
+        text=True,
     )
-    parser.add_argument(
-        "--execute",
-        action="store_true",
-        help="Run the script in execution mode and make changes.",
-    )
+    if output.returncode != 0:
+        logger.error("Unable to set KUBERNETES_TOKEN environment variable. Exiting...")
+        sys.exit(1)  # Exit if the token is not set
+    else:
+        os.environ["KUBERNETES_TOKEN"] = output.stdout.strip()
 
-    if len(sys.argv) != 2:
-        logger.info("USAGE: python update_injected_gateway_replicas.py --dry-run (OR) --execute")
-        logger.error("Please provide the relevant input to run.")
-        sys.exit(1)  # Exit with error status
+    # Configure the Kubernetes client 
+    configuration = client.Configuration()
+    configuration.api_key_prefix = {"authorization": "Bearer"}
+    configuration.api_key = {"authorization": os.environ.get("KUBERNETES_TOKEN", "")}  # Ensure the token is set in the environment variable
+    if not configuration.api_key["authorization"]:
+        logger.error("KUBERNETES_TOKEN environment variable is not set. Exiting...")
+        sys.exit(1)  # Exit if the token is not set
+    configuration.host = os.environ.get("KUBERNETES_HOST", "") # Ensure the host is set in the environment variable 
+    if not configuration.host:
+        logger.error("KUBERNETES_HOST environment variable is not set. Exiting...")
+        sys.exit(1)  # Exit if the host is not set
+    configuration.verify_ssl = False  # Disable SSL verification for local testing; set to True in production
+    
+    api_client = client.ApiClient(configuration)    
+    
+    global api  # Declare api as a global variable to use it in other functions 
+    api = client.CoreV1Api(api_client) # Initialize the Kubernetes API client
 
-    args = parser.parse_args()
-    dry_run = args.dry_run
-    if dry_run:
-        logger.info("Running in DRY RUN MODE. No changes will be made.")
-
+    # Run the main function
     main()
