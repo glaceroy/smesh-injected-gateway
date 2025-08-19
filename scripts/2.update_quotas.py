@@ -147,7 +147,7 @@ def calculate_namespace_resources(namespace):
             limits_memory = int(limits_memory.replace(limits_memory_unit, ""))
 
             logger.newline()
-            logger.info(f"Current Quota Values:")
+            logger.info("Current Quota Values:")
             logger.info(f"Requests CPU: {requests_cpu} CPU")
             logger.info(f"Requests Mem: {requests_memory}{requests_memory_unit} Memory")
             logger.info(f"Limits CPU: {limits_cpu} CPU")
@@ -177,7 +177,7 @@ def calculate_namespace_resources(namespace):
                 patch_namespace_quota(namespace, resource, value)
 
             logger.newline()
-            logger.info(f"Updated Quota Values:")
+            logger.info("Updated Quota Values:")
             logger.info(f"Requests CPU: {requests_cpu} CPU")
             logger.info(f"Requests Mem: {requests_memory}{requests_memory_unit} Memory")
             logger.info(f"Limits CPU: {limits_cpu} CPU")
@@ -193,7 +193,7 @@ def calculate_namespace_resources(namespace):
 
     else:
         logger.newline()
-        logger.warning(f"Resource quotas not defined in Gi or Core")
+        logger.warning("Resource quotas not defined in Gi or Core")
         logger.warning(
             f"Result: Fail for namespace {namespace}. Manual intervention required to update the quota."
         )
@@ -252,7 +252,7 @@ def main():
     logger.info(
         "============================   Starting Script Execution.  ============================"
     )
-
+    logger.newline()
     members_list = smmr["spec"]["members"]
 
     for members in members_list:
@@ -264,6 +264,7 @@ def main():
             logger.info(
                 "====================================================================================="
             )
+            logger.newline()
 
     logger.info(
         "============================   Script Execution Completed.   ============================"
