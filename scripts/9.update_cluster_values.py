@@ -39,7 +39,7 @@ def create_logger():
     # Create a handler
     sh = logging.StreamHandler(sys.stdout)
     handler = logging.FileHandler(
-        f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}_update_cluster_values.log",
+        f"./logs/{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}_update_cluster_values.log",
         mode="w",
         encoding="utf-8",
     )

@@ -12,6 +12,7 @@ import subprocess
 import sys
 import types
 from datetime import datetime
+import os
 
 import yaml
 
@@ -33,7 +34,7 @@ def create_logger():
     # Create a handler
     sh = logging.StreamHandler(sys.stdout)
     handler = logging.FileHandler(
-        f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}_take_quota_backup.log",
+        f"./logs/{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}_take_quota_backup.log",
         mode="w",
         encoding="utf-8",
     )
@@ -88,8 +89,10 @@ def take_quota_backup(namespace):
     quota_data = yaml.safe_load(output.stdout)
 
     # Save the quota data to a file
+    filepath = "./backups/"
     filename = f"{namespace}_quota_backup.yaml"
-    with open(filename, "w") as file:
+    fullname = os.path.join(filepath, filename)
+    with open(fullname, "w") as file:
         yaml.dump(quota_data, file)
 
     logger.info(f"Quota backup for namespace {namespace} saved to {filename}")
