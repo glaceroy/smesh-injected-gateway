@@ -28,12 +28,12 @@ def log_newline(self, how_many_lines=1):
     self.handler.setFormatter(self.formatter)
 
 
-def create_logger():
+def create_logger(cluster_prefix):
 
     # Create a handler
     sh = logging.StreamHandler(sys.stdout)
     handler = logging.FileHandler(
-        f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}_setup_script.log",
+        f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}_{cluster_prefix}-setup_script.log",
         mode="w",
         encoding="utf-8",
     )
@@ -103,8 +103,6 @@ def main():
 
 
 if __name__ == "__main__":
-    # Set global logger
-    logger = create_logger()
 
     parser = argparse.ArgumentParser("setup_script")
     parser.add_argument(
@@ -114,11 +112,14 @@ if __name__ == "__main__":
         help="Specify the cluster prefix for the folder name. Example rk-dt or pb-gen-preprod.",
     )
     if len(sys.argv) != 3:
-        logger.info("USAGE: python setup_script.py --c <cluster_prefix>")
-        logger.error("Please provide the relevant input to run.")
+        print("USAGE: python setup_script.py --c <cluster_prefix>")
+        print("ERROR: Please provide the relevant input to run.")
         sys.exit(1)  # Exit with error status
 
     args = parser.parse_args()
     cluster_prefix = args.cluster_prefix
+
+    # Set global logger
+    logger = create_logger(cluster_prefix)
 
     main()

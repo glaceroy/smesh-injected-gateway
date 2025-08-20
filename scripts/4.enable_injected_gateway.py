@@ -37,7 +37,7 @@ def create_logger():
     # Create a handler
     sh = logging.StreamHandler(sys.stdout)
     handler = logging.FileHandler(
-        f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}_enable_injected_gateway.log",
+        f"./logs/{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}_enable_injected_gateway.log",
         mode="w",
         encoding="utf-8",
     )

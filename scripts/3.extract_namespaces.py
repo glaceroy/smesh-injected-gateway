@@ -33,7 +33,7 @@ def create_logger():
     # Create a handler
     sh = logging.StreamHandler(sys.stdout)
     handler = logging.FileHandler(
-        f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}_extract_namespaces.log",
+        f"./logs/{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}_extract_namespaces.log",
         mode="w",
         encoding="utf-8",
     )
