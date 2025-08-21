@@ -83,7 +83,7 @@ def take_quota_backup(namespace):
     )
 
     if output.returncode != 0:
-        logger.error(f"Failed to get quotas for namespace {namespace}: {output.stderr}")
+        logger.error(f"Failed to get quotas for namespace '{namespace}': {output.stderr}")
         return
 
     quota_data = yaml.safe_load(output.stdout)
@@ -95,7 +95,7 @@ def take_quota_backup(namespace):
     with open(fullname, "w") as file:
         yaml.dump(quota_data, file)
 
-    logger.info(f"Quota backup for namespace {namespace} saved to {filename}")
+    logger.info(f"Quota backup for namespace '{namespace}' saved to '{filename}'")
     logger.newline()
 
 
@@ -108,9 +108,9 @@ def check_namespace(namespace):
         text=True,
     )
     if output.returncode != 0:
-        logger.error(f"Namespace {namespace} does not exist.")
+        logger.error(f"Namespace '{namespace}' does not exist.")
         return False
-    logger.info(f"Namespace {namespace} exists.")
+    logger.info(f"Namespace '{namespace}' exists.")
     return True
 
 

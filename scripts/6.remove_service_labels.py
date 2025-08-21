@@ -72,7 +72,7 @@ def validate_label_removal(namespace, service):
     )
     if output.returncode != 0:
         logger.error(
-            f"Failed to get service {service} in namespace {namespace}: {output.stderr}"
+            f"Failed to get service '{service}' in namespace '{namespace}': {output.stderr}"
         )
         sys.exit(1)
 
@@ -81,11 +81,11 @@ def validate_label_removal(namespace, service):
 
     if "app.kubernetes.io/managed-by" not in labels:
         logger.info(
-            f"Validation Complete - SMCP OWnership Label successfully removed from service {service} in namespace {namespace}"
+            f"Validation Complete - SMCP OWnership Label successfully removed from service '{service}' in namespace '{namespace}'"
         )
     else:
         logger.error(
-            f"SMCP OWnership Label still present on service {service} in namespace {namespace}"
+            f"SMCP OWnership Label still present on service '{service}' in namespace '{namespace}'"
         )
 
     logger.newline()
@@ -96,7 +96,7 @@ def remove_service_labels(namespace, service):
     # If dry run is enabled, just log the action and return.
     if dry_run:
         logger.info(
-            f"DRY RUN: Would remove labels from service {service} in namespace {namespace}"
+            f"DRY RUN: Would remove labels from service '{service}' in namespace '{namespace}'"
         )
         # Simulate the command output for dry run
         output = subprocess.CompletedProcess(
@@ -104,7 +104,7 @@ def remove_service_labels(namespace, service):
             returncode=0,
             stdout=f"oc label svc {service} -n {namespace} --overwrite app.kubernetes.io/managed-by-",
         )
-        logger.info(f"DRY RUN Command: {output.stdout}")
+        logger.info(f"DRY RUN Command: '{output.stdout}'")
     else:
         # Remove specific labels from a service in the given namespace.
         output = subprocess.run(
@@ -123,12 +123,12 @@ def remove_service_labels(namespace, service):
         )
         if output.returncode != 0:
             logger.error(
-                f"Failed to remove SMCP Ownership label from service {service} in namespace {namespace}: {output.stderr}"
+                f"Failed to remove SMCP Ownership label from service '{service}' in namespace '{namespace}': {output.stderr}"
             )
             sys.exit(1)
         else:
             logger.info(
-                f"SMCP OWnership Label removed from service {service} in namespace {namespace}"
+                f"SMCP OWnership Label removed from service '{service}' in namespace '{namespace}'"
             )
 
 
@@ -142,11 +142,11 @@ def check_service_exists(namespace, service):
         text=True,
     )
     if output.returncode != 0:
-        logger.warning(f"Service {service} does not exist in namespace {namespace}.")
+        logger.warning(f"Service '{service}' does not exist in namespace '{namespace}'.")
         logger.newline()
         return False
     else:
-        logger.info(f"Service {service} exists in namespace {namespace}.")
+        logger.info(f"Service '{service}' exists in namespace '{namespace}'.")
         return True
 
 
@@ -160,11 +160,11 @@ def check_namespace_exists(namespace):
         text=True,
     )
     if output.returncode != 0:
-        logger.warning(f"Namespace {namespace} does not exist.")
+        logger.warning(f"Namespace '{namespace}' does not exist.")
         logger.newline()
         return False
     else:
-        logger.info(f"Namespace {namespace} exists.")
+        logger.info(f"Namespace '{namespace}' exists.")
         return True
 
 

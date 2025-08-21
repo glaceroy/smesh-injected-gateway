@@ -83,9 +83,9 @@ def main():
     # Check if the required files exist
     for file in files:
         if os.path.isfile(file):
-            logger.info(f"The required file {file} exists.")
+            logger.info(f"The required file '{file}' exists.")
         else:
-            logger.error(f"Required input file {file} does not exist. Exiting.. !")
+            logger.error(f"Required input file '{file}' does not exist. Exiting.. !")
             sys.exit(1)
 
     # Read input namespace yaml file

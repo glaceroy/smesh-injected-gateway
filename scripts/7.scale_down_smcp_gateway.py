@@ -69,7 +69,7 @@ def scale_down_replicas(namespace, gateway):
     # If dry run is enabled, just log the action and return.
     if dry_run:
         logger.info(
-            f"DRY RUN: Would scale down replicas of {gateway} in namespace {namespace}"
+            f"DRY RUN: Would scale down replicas of '{gateway}' in namespace '{namespace}'"
         )
         # Simulate the command output for dry run
         output = subprocess.CompletedProcess(
@@ -77,7 +77,7 @@ def scale_down_replicas(namespace, gateway):
             returncode=0,
             stdout=f"oc scale deployment {gateway} --replicas {replicas} -n {namespace}",
         )
-        logger.info(f"DRY RUN Command: {output.stdout}")
+        logger.info(f"DRY RUN Command: '{output.stdout}'")
     else:
         # Set the expected number of replicas for a given gateway.
         output = subprocess.run(
@@ -96,11 +96,11 @@ def scale_down_replicas(namespace, gateway):
         )
         if output.returncode != 0:
             logger.error(
-                f"Failed to scale deployment in namespace {namespace}: {output.stderr}"
+                f"Failed to scale deployment in namespace '{namespace}': {output.stderr}"
             )
             sys.exit(1)
 
-        logger.info(f"Scaled deployment {gateway} to {replicas} replicas")
+        logger.info(f"Scaled deployment '{gateway}' to '{replicas}' replicas")
 
 
 def check_namespace(namespace):
@@ -112,9 +112,9 @@ def check_namespace(namespace):
         text=True,
     )
     if output.returncode != 0:
-        logger.error(f"Namespace {namespace} does not exist.")
+        logger.error(f"Namespace '{namespace}' does not exist.")
         return False
-    logger.info(f"Namespace {namespace} exists.")
+    logger.info(f"Namespace '{namespace}' exists.")
     return True
 
 
@@ -128,10 +128,10 @@ def check_deployment(namespace, gateway_id):
     )
     if output.returncode != 0:
         logger.warning(
-            f"Deployment {gateway_id} does not exist in namespace {namespace}. Moving on!"
+            f"Deployment '{gateway_id}' does not exist in namespace '{namespace}'. Moving on!"
         )
         return False
-    logger.info(f"Deployment {gateway_id} exists in namespace {namespace}.")
+    logger.info(f"Deployment '{gateway_id}' exists in namespace '{namespace}'.")
     return True
 
 

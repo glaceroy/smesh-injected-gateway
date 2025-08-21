@@ -36,16 +36,22 @@ def copy_scripts(cluster_prefix):
         "7.scale_down_smcp_gateway.py",
         "8.disable_smcp_gateway.py",
         "9.update_cluster_values.py",
+        "10.revert_back_quotas.py",
     ]
 
+    log.info("")
     for script in script_list:
-        script = os.path.join("./scripts", script)
-        if not os.path.exists(script):
-            log.error(f"Script {script} does not exist.")
-            sys.exit(1)  # Exit with error status
-        log.info(f"Copying script {script}....")
-        shutil.copy(script, cluster_prefix)
-    
+        script_source = "./scripts"
+        if not os.path.isdir(script_source):
+            log.error(f"Script source directory {script_source} does not exist.")
+            sys.exit(1)  # Exit with error status 
+        script_fullpath = os.path.join(script_source, script)
+        if not os.path.isfile(script_fullpath):
+            log.error(f"Script {script} does not exist in {script_source}.")
+            sys.exit(1)
+        log.info(f"[ Copying Script ].......... {script}")
+        shutil.copy(script_fullpath, cluster_prefix)
+
     return True
 
 
@@ -73,6 +79,7 @@ def main():
 
     if create_directory(cluster_prefix):
         if copy_scripts(cluster_prefix):
+            log.info("")
             log.info("Setup completed successfully.")
 
 
