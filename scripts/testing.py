@@ -16,7 +16,7 @@ from datetime import datetime
 
 import kubernetes.client
 import yaml
-from kubernetes import client
+from kubernetes import client, config
 
 
 def log_newline(self, how_many_lines=1):
@@ -63,22 +63,24 @@ def create_logger():
 
     return logger
 
-
 def get_pod_ip(label_selector, namespace):
+    
+    # Get the pod IPs based on the label selector in the specified namespace.
     try:
-        pods = api.list_namespaced_pod(namespace, label_selector=label_selector)
+        pods = core_api.list_namespaced_pod(namespace, label_selector=label_selector)
         if not pods.items:
             logger.warning(
                 f"No pods found with label selector '{label_selector}' in namespace '{namespace}'."
             )
             return False
-
+        
         pod_ip = {}
         for pod in pods.items:
             if pod.status.pod_ip:
                 pod_ip[pod.metadata.name] = pod.status.pod_ip
 
         return pod_ip
+
     except kubernetes.client.rest.ApiException as e:
         logger.error(
             f"Error checking pods with label selector '{label_selector}' in namespace '{namespace}': {e}"
@@ -88,33 +90,75 @@ def get_pod_ip(label_selector, namespace):
 
 def check_service_endpoints(service_name, namespace, pod_ip):
 
+    # Check if the service endpoints are available for the given service in the specified namespace.
     try:
-        endpoints = api.read_namespaced_endpoints(service_name, namespace)
-        
+        endpoints = core_api.read_namespaced_endpoints(service_name, namespace)
+
         if not endpoints.subsets:
-            logger.warning(f"Service '{service_name}' in namespace '{namespace}' has no endpoints.")
+            logger.warning(
+                f"Service '{service_name}' in namespace '{namespace}' has no endpoints."
+            )
             return False
         
-        for k, v in pod_ip.items():
-            if v not in [address.ip for subset in endpoints.subsets for address in subset.addresses]:
-                logger.warning(f"Pod '{k}' with IP '{v}' is not listed in the service '{service_name}' endpoints.")
-            else:
-                logger.info(f"Pod '{k}' with IP '{v}' is listed in the service '{service_name}' endpoints.")
-                
-        for subset in endpoints.subsets:
-            for address in subset.addresses:
-                    logger.info(f"Service '{service_name}' in namespace '{namespace}' has endpoint: {address.ip}")
-        
-        return True
+        # Check if any subset has addresses
+        if any(subset.addresses for subset in endpoints.subsets):
+            logger.info(
+                f"Service '{service_name}' in namespace '{namespace}' has endpoints."
+            )
+            for k, v in pod_ip.items():
+                if v in [
+                    address.ip
+                    for subset in endpoints.subsets
+                    if subset.addresses
+                    for address in subset.addresses
+                ]:
+                    logger.info(
+                        f"Pod '{k}' with IP '{v}' is listed in the service '{service_name}' as READY endpoint."
+                    )
+                 # Check if any subset has not_ready_addresses
+                elif v in [
+                        address.ip
+                        for subset in endpoints.subsets
+                        if subset.not_ready_addresses
+                        for address in subset.not_ready_addresses
+                ]:
+                        logger.warning(
+                            f"Pod '{k}' with IP '{v}' is listed in the service '{service_name}' as NOT READY endpoint."
+                        )
+                else:
+                    logger.warning(
+                        f"Pod '{k}' with IP '{v}' is NOT listed in the service '{service_name}' as an endpoint."
+                    )
+
     except kubernetes.client.rest.ApiException as e:
-        logger.error(f"Error checking service '{service_name}' in namespace '{namespace}': {e}")
+        logger.error(
+            f"Error checking service '{service_name}' in namespace '{namespace}': {e}"
+        )
         return False
 
+def check_replicas_mismatch(namespace, deployment_name):
+
+    # Check if the number of desired replicas matches the number of available replicas for a deployment.
+    try:
+        deployment = apps_api.read_namespaced_deployment(deployment_name, namespace)
+        desired_replicas = deployment.spec.replicas
+        available_replicas = deployment.status.available_replicas
+
+        if desired_replicas != available_replicas:
+            logger.warning(
+                f"Replica mismatch for deployment '{deployment_name}' in namespace '{namespace}': "
+                f"desired={desired_replicas}, available={available_replicas}"
+            )
+            return True
+    except kubernetes.client.rest.ApiException as e:
+        logger.error(
+            f"Error checking replicas for deployment '{deployment_name}' in namespace '{namespace}': {e}"
+        )
+    return False
 
 def check_service_exists(namespace, service):
 
     # Check if a service exists in the given namespace.
-
     output = subprocess.run(
         ["oc", "get", "svc", service, "-n", namespace],
         capture_output=True,
@@ -192,10 +236,15 @@ def main():
             # Check if the service exists in the namespace
             if check_service_exists(namespace, gateway_id):
                 # Check if the pod IPs are available
-                label_selector = f"app={gateway_id}"
+                label_selector = f"type=injectedgateway, app={gateway_id}"
                 pod_ip = get_pod_ip(label_selector, namespace)
                 # Check if the service endpoints are available
-                check_service_endpoints(gateway_id, namespace, pod_ip)
+                if pod_ip:
+                    check_service_endpoints(gateway_id, namespace, pod_ip)
+                else:
+                    logger.warning(f"No valid pod IPs found for {gateway_id} in {namespace}.")
+
+                check_replicas_mismatch(namespace, deployment_name)
 
                 logger.newline()
                 logger.info(
@@ -214,41 +263,10 @@ if __name__ == "__main__":
 
     check_login()
 
-    # Configure the Kubernetes client to connect to the OpenShift cluster.
-    output = subprocess.run(
-        ["oc", "whoami", "-t"],
-        capture_output=True,
-        text=True,
-    )
-    if output.returncode != 0:
-        logger.error("Unable to set KUBERNETES_TOKEN environment variable. Exiting...")
-        sys.exit(1)  # Exit if the token is not set
-    else:
-        os.environ["KUBERNETES_TOKEN"] = output.stdout.strip()
+    config.load_kube_config()
 
-    # Configure the Kubernetes client
-    configuration = client.Configuration()
-    configuration.api_key_prefix = {"authorization": "Bearer"}
-    configuration.api_key = {
-        "authorization": os.environ.get("KUBERNETES_TOKEN", "")
-    }  # Ensure the token is set in the environment variable
-    if not configuration.api_key["authorization"]:
-        logger.error("KUBERNETES_TOKEN environment variable is not set. Exiting...")
-        sys.exit(1)  # Exit if the token is not set
-    configuration.host = os.environ.get(
-        "KUBERNETES_HOST", ""
-    )  # Ensure the host is set in the environment variable
-    if not configuration.host:
-        logger.error("KUBERNETES_HOST environment variable is not set. Exiting...")
-        sys.exit(1)  # Exit if the host is not set
-    configuration.verify_ssl = (
-        False  # Disable SSL verification for local testing; set to True in production
-    )
-
-    api_client = client.ApiClient(configuration)
-
-    global api  # Declare api as a global variable to use it in other functions
-    api = client.CoreV1Api(api_client)  # Initialize the Kubernetes API client
+    core_api = client.CoreV1Api()
+    apps_api = client.AppsV1Api()
 
     # Run the main function
     main()

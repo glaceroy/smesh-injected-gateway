@@ -7,16 +7,17 @@ Version       : 1.0
 Description   : This scripts checks the service endpoints for injected gateways pods in an OpenShift cluster.
 """
 
+
+
 import logging
 import os
 import subprocess
 import sys
 import types
 from datetime import datetime
-
-import kubernetes.client
+import kubernetes.client.rest
+from kubernetes import client, config
 import yaml
-from kubernetes import client
 
 
 def log_newline(self, how_many_lines=1):
@@ -42,7 +43,7 @@ def create_logger():
     )
     handler.setLevel(logging.DEBUG)
     formatter = logging.Formatter(
-        fmt="[%(asctime)s] %(levelname)8s : %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
+        fmt="[%(asctime)s] %(levelname)8s : %(message)s", datefmt="%a, %d %b %Y %H:%M:%S"
     )
     blank_formatter = logging.Formatter(fmt="")
     handler.setFormatter(formatter)
@@ -65,20 +66,23 @@ def create_logger():
 
 
 def get_pod_ip(label_selector, namespace):
+    
+    # Get the pod IPs based on the label selector in the specified namespace.
     try:
-        pods = api.list_namespaced_pod(namespace, label_selector=label_selector)
+        pods = core_api.list_namespaced_pod(namespace, label_selector=label_selector)
         if not pods.items:
             logger.warning(
                 f"No pods found with label selector '{label_selector}' in namespace '{namespace}'."
             )
             return False
-
+        
         pod_ip = {}
         for pod in pods.items:
             if pod.status.pod_ip:
                 pod_ip[pod.metadata.name] = pod.status.pod_ip
 
         return pod_ip
+
     except kubernetes.client.rest.ApiException as e:
         logger.error(
             f"Error checking pods with label selector '{label_selector}' in namespace '{namespace}': {e}"
@@ -87,8 +91,10 @@ def get_pod_ip(label_selector, namespace):
 
 
 def check_service_endpoints(service_name, namespace, pod_ip):
+
+    # Check if the service endpoints are available for the given service in the specified namespace.
     try:
-        endpoints = api.read_namespaced_endpoints(service_name, namespace)
+        endpoints = core_api.read_namespaced_endpoints(service_name, namespace)
 
         if not endpoints.subsets:
             logger.warning(
@@ -96,7 +102,6 @@ def check_service_endpoints(service_name, namespace, pod_ip):
             )
             return False
         
-
         # Check if any subset has addresses
         if any(subset.addresses for subset in endpoints.subsets):
             logger.info(
@@ -133,11 +138,29 @@ def check_service_endpoints(service_name, namespace, pod_ip):
         )
         return False
 
+def check_replicas_mismatch(namespace, deployment_name):
+
+    # Check if the number of desired replicas matches the number of available replicas for a deployment.
+    try:
+        deployment = apps_api.read_namespaced_deployment(deployment_name, namespace)
+        desired_replicas = deployment.spec.replicas
+        available_replicas = deployment.status.available_replicas
+
+        if desired_replicas != available_replicas:
+            logger.warning(
+                f"Replica mismatch for deployment '{deployment_name}' in namespace '{namespace}': "
+                f"desired={desired_replicas}, available={available_replicas}"
+            )
+            return True
+    except kubernetes.client.rest.ApiException as e:
+        logger.error(
+            f"Error checking replicas for deployment '{deployment_name}' in namespace '{namespace}': {e}"
+        )
+    return False
 
 def check_service_exists(namespace, service):
 
     # Check if a service exists in the given namespace.
-
     output = subprocess.run(
         ["oc", "get", "svc", service, "-n", namespace],
         capture_output=True,
@@ -238,10 +261,15 @@ def main():
                         # Check if the service exists in the namespace
                         if check_service_exists(namespace, gateway_id):
                             # Check if the pod IPs are available
-                            label_selector = f"app={gateway_id}"
+                            label_selector = f"type=injectedgateway, app={gateway_id}"
                             pod_ip = get_pod_ip(label_selector, namespace)
                             # Check if the service endpoints are available
-                            check_service_endpoints(gateway_id, namespace, pod_ip)
+                            if pod_ip:
+                                check_service_endpoints(gateway_id, namespace, pod_ip)
+                            else:
+                                logger.warning(f"No valid pod IPs found for {gateway_id} in {namespace}.")
+
+                            check_replicas_mismatch(namespace, deployment_name)
 
                             logger.newline()
                             logger.info(
@@ -272,6 +300,8 @@ if __name__ == "__main__":
     else:
         os.environ["KUBERNETES_TOKEN"] = output.stdout.strip()
 
+    config.load_kube_config()
+
     # Configure the Kubernetes client
     configuration = client.Configuration()
     configuration.api_key_prefix = {"authorization": "Bearer"}
@@ -293,8 +323,11 @@ if __name__ == "__main__":
 
     api_client = client.ApiClient(configuration)
 
-    global api  # Declare api as a global variable to use it in other functions
-    api = client.CoreV1Api(api_client)  # Initialize the Kubernetes API client
+
+    global core_api, apps_api  # Declare core_api and apps_api as global variables to use them in other functions
+    core_api = client.CoreV1Api(api_client)
+    apps_api = client.AppsV1Api(api_client)
+    
 
     # Run the main function
     main()
