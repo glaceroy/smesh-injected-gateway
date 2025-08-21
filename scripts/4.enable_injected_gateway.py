@@ -120,7 +120,7 @@ def main():
                         ):
                             cluster_values["project"][ns_index]["egress"][
                                 "injected_egress"
-                            ] = "true"
+                            ] = True
                     elif key == "ingress":
                         if (
                             cluster_values["project"][ns_index]["ingress"]["enabled"]
@@ -128,7 +128,7 @@ def main():
                         ):
                             cluster_values["project"][ns_index]["ingress"][
                                 "injected_ingress"
-                            ] = "true"
+                            ] = True
 
                 update_config_file(cluster_values)
 
