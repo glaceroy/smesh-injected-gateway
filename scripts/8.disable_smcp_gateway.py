@@ -77,7 +77,7 @@ def patch_smcp(gateway_type, gateway_id):
 
     if dry_run:
         logger.info(
-            f"DRY RUN: Would patch SMCP to disable {gateway_type} gateway {gateway_id} with data: {json_patch}"
+            f"DRY RUN: Would patch SMCP to disable '{gateway_type}' gateway '{gateway_id}' with data: {json_patch}"
         )
         output = subprocess.CompletedProcess(
             args=[],
@@ -85,7 +85,7 @@ def patch_smcp(gateway_type, gateway_id):
             stdout=f"oc patch smcp app-mesh-01 -n istio-system --type=json -p='{json_patch}'",
             stderr="",
         )
-        logger.info(f"DRY RUN Command: {output.stdout}")
+        logger.info(f"DRY RUN Command: '{output.stdout}'")
         logger.newline()
     else:
         # Patch the SMCP configuration to disable the gateways.
@@ -159,7 +159,7 @@ def main():
                     "namespace"
                 ]
                 logger.info(
-                    "Disabling SMCP gateway: %s in namespace: %s", gateway_id, namespace
+                    f"Disabling SMCP gateway: '{gateway_id}' in namespace: '{namespace}'"
                 )
                 patch_smcp(gateway_type, gateway_id)
 

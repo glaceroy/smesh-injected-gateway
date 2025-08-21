@@ -69,7 +69,7 @@ def patch_namespace_quota(namespace, quota_resource, value):
 
     if dry_run:
         logger.info(
-            f"DRY RUN: Would patch resource quota for namespace {namespace} with {quota_resource} = {value}"
+            f"DRY RUN: Would patch resource quota for namespace '{namespace}' with '{quota_resource}' = '{value}'"
         )
         # Simulate the patching action without executing it
         output = subprocess.CompletedProcess(
@@ -83,7 +83,7 @@ def patch_namespace_quota(namespace, quota_resource, value):
     else:
         # Log the action of patching the resource quota
         logger.info(
-            f"Patching resource quota for namespace {namespace} with {quota_resource} = {value}"
+            f"Patching resource quota for namespace '{namespace}' with '{quota_resource}' = '{value}'"
         )
         # Patch the resource quota for the namespace
         output = subprocess.run(
@@ -111,7 +111,7 @@ def calculate_namespace_resources(namespace):
     ops = {"increase": operator.add, "decrease": operator.sub}
     if operand not in ops:
         logger.error(
-            f"Invalid operand: {operand}. Please use 'increase' or 'decrease'."
+            f"Invalid operand: '{operand}'. Please use 'increase' or 'decrease'."
         )
         sys.exit(1)
     op_func = ops[operand]
@@ -193,7 +193,7 @@ def calculate_namespace_resources(namespace):
                 # Log the successful patching of the resource quota
                 logger.newline()
                 logger.info(
-                    f"Resource Quota for namespace {namespace} has been updated successfully."
+                    f"Resource Quota for namespace '{namespace}' has been updated successfully."
                 )
                 logger.newline()
 
@@ -201,7 +201,7 @@ def calculate_namespace_resources(namespace):
         logger.newline()
         logger.warning("Resource quotas not defined in Gi or Core")
         logger.warning(
-            f"Result: Fail for namespace {namespace}. Manual intervention required to update the quota."
+            f"Result: Fail for namespace '{namespace}'. Manual intervention required to update the quota."
         )
         logger.newline()
 
@@ -215,9 +215,9 @@ def check_namespace(namespace):
         text=True,
     )
     if output.returncode != 0:
-        logger.error(f"Namespace {namespace} does not exist.")
+        logger.error(f"Namespace '{namespace}' does not exist.")
         return False
-    logger.info(f"Namespace {namespace} exists.")
+    logger.info(f"Namespace '{namespace}' exists.")
     return True
 
 

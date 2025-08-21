@@ -167,11 +167,11 @@ def check_service_exists(namespace, service):
         text=True,
     )
     if output.returncode != 0:
-        logger.warning(f"Service {service} does not exist in namespace {namespace}.")
+        logger.warning(f"Service '{service}' does not exist in namespace '{namespace}'.")
         logger.newline()
         return False
     else:
-        logger.info(f"Service {service} exists in namespace {namespace}.")
+        logger.info(f"Service '{service}' exists in namespace '{namespace}'.")
         return True
 
 
@@ -184,9 +184,9 @@ def check_namespace(namespace):
         text=True,
     )
     if output.returncode != 0:
-        logger.error(f"Namespace {namespace} does not exist.")
+        logger.error(f"Namespace '{namespace}' does not exist.")
         return False
-    logger.info(f"Namespace {namespace} exists.")
+    logger.info(f"Namespace '{namespace}' exists.")
     return True
 
 
@@ -200,10 +200,10 @@ def check_deployment(namespace, gateway_id):
     )
     if output.returncode != 0:
         logger.warning(
-            f"Deployment {gateway_id} does not exist in namespace {namespace}. Moving on!"
+            f"Deployment '{gateway_id}' does not exist in namespace '{namespace}'. Moving on!"
         )
         return False
-    logger.info(f"Deployment {gateway_id} exists in namespace {namespace}.")
+    logger.info(f"Deployment '{gateway_id}' exists in namespace '{namespace}'.")
     return True
 
 
