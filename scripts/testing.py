@@ -36,7 +36,7 @@ def create_logger():
     # Create a handler
     sh = logging.StreamHandler(sys.stdout)
     handler = logging.FileHandler(
-        f"./logs/{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}_check_service_endpoints.log",
+        f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}_check_service_endpoints.log",
         mode="w",
         encoding="utf-8",
     )
@@ -87,50 +87,27 @@ def get_pod_ip(label_selector, namespace):
 
 
 def check_service_endpoints(service_name, namespace, pod_ip):
+
     try:
         endpoints = api.read_namespaced_endpoints(service_name, namespace)
-
+        
         if not endpoints.subsets:
-            logger.warning(
-                f"Service '{service_name}' in namespace '{namespace}' has no endpoints."
-            )
+            logger.warning(f"Service '{service_name}' in namespace '{namespace}' has no endpoints.")
             return False
         
-
-        # Check if any subset has addresses
-        if any(subset.addresses for subset in endpoints.subsets):
-            logger.info(
-                f"Service '{service_name}' in namespace '{namespace}' has endpoints."
-            )
-            for k, v in pod_ip.items():
-                if v in [
-                    address.ip
-                    for subset in endpoints.subsets
-                    if subset.addresses
-                    for address in subset.addresses
-                ]:
-                    logger.info(
-                        f"Pod '{k}' with IP '{v}' is listed in the service '{service_name}' as READY endpoint."
-                    )
-                 # Check if any subset has not_ready_addresses
-                elif v in [
-                        address.ip
-                        for subset in endpoints.subsets
-                        if subset.not_ready_addresses
-                        for address in subset.not_ready_addresses
-                ]:
-                        logger.warning(
-                            f"Pod '{k}' with IP '{v}' is listed in the service '{service_name}' as NOT READY endpoint."
-                        )
-                else:
-                    logger.warning(
-                        f"Pod '{k}' with IP '{v}' is NOT listed in the service '{service_name}' as an endpoint."
-                    )
-
+        for k, v in pod_ip.items():
+            if v not in [address.ip for subset in endpoints.subsets for address in subset.addresses]:
+                logger.warning(f"Pod '{k}' with IP '{v}' is not listed in the service '{service_name}' endpoints.")
+            else:
+                logger.info(f"Pod '{k}' with IP '{v}' is listed in the service '{service_name}' endpoints.")
+                
+        for subset in endpoints.subsets:
+            for address in subset.addresses:
+                    logger.info(f"Service '{service_name}' in namespace '{namespace}' has endpoint: {address.ip}")
+        
+        return True
     except kubernetes.client.rest.ApiException as e:
-        logger.error(
-            f"Error checking service '{service_name}' in namespace '{namespace}': {e}"
-        )
+        logger.error(f"Error checking service '{service_name}' in namespace '{namespace}': {e}")
         return False
 
 
@@ -200,53 +177,30 @@ def check_login():
 
 def main():
 
-    # Read SMCP configuration from the OpenShift cluster.
-    output = subprocess.run(
-        [
-            "oc",
-            "get",
-            "smcp",
-            "app-mesh-01",
-            "-n",
-            "istio-system",
-            "-o",
-            "yaml",
-        ],
-        capture_output=True,
-    )
-    smcp = yaml.safe_load(output.stdout)
-
     logger.info(
         "============================   Starting Script Execution.  ============================"
     )
 
-    gateway_list = smcp["spec"]["gateways"]
 
-    for gateway_type in gateway_list:
-        if gateway_type in ["additionalEgress", "additionalIngress"]:
-            for gateway_id in smcp["spec"]["gateways"][gateway_type]:
-                namespace = smcp["spec"]["gateways"][gateway_type][gateway_id][
-                    "namespace"
-                ]
+    namespace = "lbg-ocp-engineering-100-lab"
+    gateway_id = "eg001"
+
+    if check_namespace(namespace):
+        # Check if deployment exists in the namespace
+        deployment_name = f"{gateway_id}-gateway"
+        if check_deployment(namespace, deployment_name):
+            # Check if the service exists in the namespace
+            if check_service_exists(namespace, gateway_id):
+                # Check if the pod IPs are available
+                label_selector = f"app={gateway_id}"
+                pod_ip = get_pod_ip(label_selector, namespace)
+                # Check if the service endpoints are available
+                check_service_endpoints(gateway_id, namespace, pod_ip)
 
                 logger.newline()
-                # Check if namespace exists
-                if check_namespace(namespace):
-                    # Check if deployment exists in the namespace
-                    deployment_name = f"{gateway_id}-gateway"
-                    if check_deployment(namespace, deployment_name):
-                        # Check if the service exists in the namespace
-                        if check_service_exists(namespace, gateway_id):
-                            # Check if the pod IPs are available
-                            label_selector = f"app={gateway_id}"
-                            pod_ip = get_pod_ip(label_selector, namespace)
-                            # Check if the service endpoints are available
-                            check_service_endpoints(gateway_id, namespace, pod_ip)
-
-                            logger.newline()
-                            logger.info(
-                                "====================================================================================="
-                            )
+                logger.info(
+                            "====================================================================================="
+                )
 
     logger.newline()
     logger.info(
