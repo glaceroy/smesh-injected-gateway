@@ -95,9 +95,32 @@ def take_quota_backup(namespace):
     with open(fullname, "w") as file:
         yaml.dump(quota_data, file)
 
-    logger.info(f"Quota backup for namespace '{namespace}' saved to '{filename}'")
+    logger.info(f"Quota backup for namespace '{namespace}' saved to '{fullname}'")
     logger.newline()
 
+def check_quota(namespace):
+
+    # Check if a quota exists for the given namespace.
+    output = subprocess.run(
+        [
+            "oc",
+            "get",
+            "quota",
+            f"{namespace}-quota",
+            "-n",
+            namespace,
+            "-o",
+            "yaml",
+        ],
+        capture_output=True,
+        text=True,
+    )
+    if output.returncode != 0:
+        logger.error(f"Quota '{namespace}-quota' does not exist.")
+        logger.newline()
+        return False
+    logger.info(f"Quota '{namespace}-quota' exists.")
+    return True
 
 def check_namespace(namespace):
 
@@ -157,8 +180,10 @@ def main():
     for members in members_list:
         # Check if namespace exists
         if check_namespace(members):
-            # Calculate the current resource quotas for the namespace
-            take_quota_backup(members)
+            # Check if quota exists in the namespace
+            if check_quota(members):
+                # Taking a backup of current quota
+                take_quota_backup(members)
 
             logger.info(
                 "====================================================================================="

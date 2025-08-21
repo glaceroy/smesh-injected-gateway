@@ -80,10 +80,18 @@ def validate_label_removal(namespace, service):
     labels = service_data.get("metadata", {}).get("labels", {})
 
     if "app.kubernetes.io/managed-by" not in labels:
+        logger.newline()
         logger.info(
             f"Validation Complete - SMCP OWnership Label successfully removed from service '{service}' in namespace '{namespace}'"
         )
+        logger.newline()
+        logger.info(
+            f"Service '{service}' has following labels AFTER removal: "
+        )
+        for key, value in labels.items():
+            logger.info(f" - {key}: {value}")
     else:
+        logger.newline()
         logger.error(
             f"SMCP OWnership Label still present on service '{service}' in namespace '{namespace}'"
         )
@@ -95,9 +103,6 @@ def remove_service_labels(namespace, service):
 
     # If dry run is enabled, just log the action and return.
     if dry_run:
-        logger.info(
-            f"DRY RUN: Would remove labels from service '{service}' in namespace '{namespace}'"
-        )
         # Simulate the command output for dry run
         output = subprocess.CompletedProcess(
             args=[],
@@ -105,7 +110,29 @@ def remove_service_labels(namespace, service):
             stdout=f"oc label svc {service} -n {namespace} --overwrite app.kubernetes.io/managed-by-",
         )
         logger.info(f"DRY RUN Command: '{output.stdout}'")
+        logger.newline()
     else:
+        output = subprocess.run(
+            ["oc", "get", "svc", service, "-n", namespace, "-o", "yaml"],
+            capture_output=True,
+            text=True,
+        )
+        if output.returncode != 0:
+            logger.error(
+                f"Failed to get service '{service}' in namespace '{namespace}': {output.stderr}"
+            )
+            sys.exit(1)
+
+        service_data = yaml.safe_load(output.stdout)
+        labels = service_data.get("metadata", {}).get("labels", {})
+
+        logger.newline()
+        logger.info(
+            f"Service '{service}' has following labels BEFORE removal: "
+        )
+        for key, value in labels.items():
+            logger.info(f" - {key}: {value}")
+
         # Remove specific labels from a service in the given namespace.
         output = subprocess.run(
             [
@@ -122,13 +149,15 @@ def remove_service_labels(namespace, service):
             text=True,
         )
         if output.returncode != 0:
+            logger.newline()
             logger.error(
                 f"Failed to remove SMCP Ownership label from service '{service}' in namespace '{namespace}': {output.stderr}"
             )
             sys.exit(1)
         else:
+            logger.newline()
             logger.info(
-                f"SMCP OWnership Label removed from service '{service}' in namespace '{namespace}'"
+                f"SMCP OWnership Label \"app.kubernetes.io/managed-by\" removed from service '{service}' in namespace '{namespace}'"
             )
 
 
@@ -222,7 +251,9 @@ def main():
                     if check_service_exists(namespace, gateway_id):
                         # Remove service labels
                         remove_service_labels(namespace, gateway_id)
-                        validate_label_removal(namespace, gateway_id)
+                        if not dry_run:
+                            # Validate label removal
+                            validate_label_removal(namespace, gateway_id)
 
                         logger.info(
                             "====================================================================================="
@@ -258,6 +289,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
     dry_run = args.dry_run
     if dry_run:
-        logger.info("Running in DRY RUN MODE. No changes will be made.")
+        logger.info("********************************************************************")
+        logger.info("****       Running in DRY RUN MODE. No changes will be made.    ****")
+        logger.info("********************************************************************")
+        logger.newline()
 
     main()
