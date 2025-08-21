@@ -321,7 +321,6 @@ if __name__ == "__main__":
 
     api_client = client.ApiClient(configuration)
 
-
     global core_api, apps_api  # Declare core_api and apps_api as global variables to use them in other functions
     core_api = client.CoreV1Api(api_client)
     apps_api = client.AppsV1Api(api_client)
