@@ -68,9 +68,6 @@ def scale_down_replicas(namespace, gateway):
 
     # If dry run is enabled, just log the action and return.
     if dry_run:
-        logger.info(
-            f"DRY RUN: Would scale down replicas of '{gateway}' in namespace '{namespace}'"
-        )
         # Simulate the command output for dry run
         output = subprocess.CompletedProcess(
             args=[],
@@ -78,6 +75,7 @@ def scale_down_replicas(namespace, gateway):
             stdout=f"oc scale deployment {gateway} --replicas {replicas} -n {namespace}",
         )
         logger.info(f"DRY RUN Command: '{output.stdout}'")
+        logger.newline()
     else:
         # Set the expected number of replicas for a given gateway.
         output = subprocess.run(
@@ -98,10 +96,38 @@ def scale_down_replicas(namespace, gateway):
             logger.error(
                 f"Failed to scale deployment in namespace '{namespace}': {output.stderr}"
             )
-            sys.exit(1)
 
         logger.info(f"Scaled deployment '{gateway}' to '{replicas}' replicas")
 
+        replica_count = get_replica_count(namespace, gateway)
+        
+        logger.info(f"Current replica count for deployment '{gateway}' is '{replica_count}' replicas")
+        logger.newline()
+
+
+def get_replica_count(namespace, gateway):
+
+    output = subprocess.run(
+        [
+            "oc",
+            "get",
+            "deployment",
+            gateway,
+            "-n",
+            namespace,
+            "-o",
+            "jsonpath='{.spec.replicas}'"
+        ],
+        capture_output=True,
+        text=True,
+    )
+    if output.returncode != 0:
+        logger.error(
+            f"Failed to get replica count for deployment '{gateway}' in namespace '{namespace}': {output.stderr}"
+        )
+        return None
+
+    return int(output.stdout.strip().strip("'"))
 
 def check_namespace(namespace):
 
@@ -223,6 +249,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
     dry_run = args.dry_run
     if dry_run:
-        logger.info("Running in DRY RUN MODE. No changes will be made.")
+        logger.info("********************************************************************")
+        logger.info("****       Running in DRY RUN MODE. No changes will be made.    ****")
+        logger.info("********************************************************************")
+        logger.newline()
 
     main()

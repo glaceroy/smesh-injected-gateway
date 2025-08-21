@@ -76,9 +76,6 @@ def patch_smcp(gateway_type, gateway_id):
     json_patch = json.dumps(patch_data)
 
     if dry_run:
-        logger.info(
-            f"DRY RUN: Would patch SMCP to disable '{gateway_type}' gateway '{gateway_id}' with data: {json_patch}"
-        )
         output = subprocess.CompletedProcess(
             args=[],
             returncode=0,
@@ -104,10 +101,10 @@ def patch_smcp(gateway_type, gateway_id):
         )
 
         if output.returncode != 0:
-            logger.error("Failed to patch SMCP: %s", output.stderr.decode())
+            logger.error(f"Failed to patch SMCP: {output.stderr.decode()}")
             sys.exit(1)
         else:
-            logger.info("Successfully patched smcp: %s", patch_data)
+            logger.info(f"Successfully patched smcp: {patch_data}")
             logger.newline()
 
 
@@ -196,6 +193,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
     dry_run = args.dry_run
     if dry_run:
-        logger.info("Running in DRY RUN MODE. No changes will be made.")
+        logger.info("********************************************************************")
+        logger.info("****       Running in DRY RUN MODE. No changes will be made.    ****")
+        logger.info("********************************************************************")
+        logger.newline()
 
     main()

@@ -160,10 +160,10 @@ def calculate_namespace_resources(namespace):
 
             logger.newline()
             logger.info("Current Quota Values:")
-            logger.info(f"Requests CPU: {requests_cpu} CPU")
-            logger.info(f"Requests Mem: {requests_memory}{requests_memory_unit} Memory")
-            logger.info(f"Limits CPU: {limits_cpu} CPU")
-            logger.info(f"Limits Mem: {limits_memory}{limits_memory_unit} Memory")
+            logger.info(f" - Requests CPU  : {requests_cpu} CPU")
+            logger.info(f" - Requests Mem  : {requests_memory}{requests_memory_unit} Memory")
+            logger.info(f" - Limits CPU    : {limits_cpu} CPU")
+            logger.info(f" - Limits Mem    : {limits_memory}{limits_memory_unit} Memory")
 
             requests_cpu = op_func(requests_cpu, update_cpu_unit)
             requests_memory = op_func(requests_memory, update_memory_unit)
@@ -184,10 +184,10 @@ def calculate_namespace_resources(namespace):
 
             logger.newline()
             logger.info("Updated Quota Values:")
-            logger.info(f"Requests CPU: {requests_cpu} CPU")
-            logger.info(f"Requests Mem: {requests_memory}{requests_memory_unit} Memory")
-            logger.info(f"Limits CPU: {limits_cpu} CPU")
-            logger.info(f"Limits Mem: {limits_memory}{limits_memory_unit} Memory")
+            logger.info(f" - Requests CPU  : {requests_cpu} CPU")
+            logger.info(f" - Requests Mem  : {requests_memory}{requests_memory_unit} Memory")
+            logger.info(f" - Limits CPU    : {limits_cpu} CPU")
+            logger.info(f" - Limits Mem    : {limits_memory}{limits_memory_unit} Memory")
 
             if not dry_run:
                 # Log the successful patching of the resource quota
