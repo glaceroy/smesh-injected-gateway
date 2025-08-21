@@ -300,8 +300,6 @@ if __name__ == "__main__":
     else:
         os.environ["KUBERNETES_TOKEN"] = output.stdout.strip()
 
-    config.load_kube_config()
-
     # Configure the Kubernetes client
     configuration = client.Configuration()
     configuration.api_key_prefix = {"authorization": "Bearer"}
