@@ -80,6 +80,8 @@ def main():
     if create_directory(cluster_prefix):
         if copy_scripts(cluster_prefix):
             log.info("")
+            log.info(f"All required scripts are located under ./{cluster_prefix}")
+            log.info("")
             log.info("Setup completed successfully.")
 
 
