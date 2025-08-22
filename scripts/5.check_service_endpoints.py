@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Filename      : check_service_endpoints.py
 Author        : Aiyaz Khan
@@ -8,16 +7,16 @@ Description   : This scripts checks the service endpoints for injected gateways 
 """
 
 
-
 import logging
 import os
 import subprocess
 import sys
 import types
 from datetime import datetime
+
 import kubernetes.client.rest
-from kubernetes import client, config
 import yaml
+from kubernetes import client, config
 
 
 def log_newline(self, how_many_lines=1):
@@ -43,7 +42,8 @@ def create_logger():
     )
     handler.setLevel(logging.DEBUG)
     formatter = logging.Formatter(
-        fmt="[%(asctime)s] %(levelname)8s : %(message)s", datefmt="%a, %d %b %Y %H:%M:%S"
+        fmt="[%(asctime)s] %(levelname)8s : %(message)s",
+        datefmt="%a, %d %b %Y %H:%M:%S",
     )
     blank_formatter = logging.Formatter(fmt="")
     handler.setFormatter(formatter)
@@ -66,7 +66,7 @@ def create_logger():
 
 
 def get_pod_ip(label_selector, namespace):
-    
+
     # Get the pod IPs based on the label selector in the specified namespace.
     try:
         pods = core_api.list_namespaced_pod(namespace, label_selector=label_selector)
@@ -75,7 +75,7 @@ def get_pod_ip(label_selector, namespace):
                 f"No pods found with label selector '{label_selector}' in namespace '{namespace}'."
             )
             return False
-        
+
         pod_ip = {}
         for pod in pods.items:
             if pod.status.pod_ip:
@@ -101,7 +101,7 @@ def check_service_endpoints(service_name, namespace, pod_ip):
                 f"Service '{service_name}' in namespace '{namespace}' has no endpoints."
             )
             return False
-        
+
         # Check if any subset has addresses
         if any(subset.addresses for subset in endpoints.subsets):
             logger.info(
@@ -117,16 +117,16 @@ def check_service_endpoints(service_name, namespace, pod_ip):
                     logger.info(
                         f"Pod '{k}' with IP '{v}' is listed in the service '{service_name}' as READY endpoint."
                     )
-                 # Check if any subset has not_ready_addresses
+                # Check if any subset has not_ready_addresses
                 elif v in [
-                        address.ip
-                        for subset in endpoints.subsets
-                        if subset.not_ready_addresses
-                        for address in subset.not_ready_addresses
+                    address.ip
+                    for subset in endpoints.subsets
+                    if subset.not_ready_addresses
+                    for address in subset.not_ready_addresses
                 ]:
-                        logger.warning(
-                            f"Pod '{k}' with IP '{v}' is listed in the service '{service_name}' as NOT READY endpoint."
-                        )
+                    logger.warning(
+                        f"Pod '{k}' with IP '{v}' is listed in the service '{service_name}' as NOT READY endpoint."
+                    )
                 else:
                     logger.warning(
                         f"Pod '{k}' with IP '{v}' is NOT listed in the service '{service_name}' as an endpoint."
@@ -137,6 +137,7 @@ def check_service_endpoints(service_name, namespace, pod_ip):
             f"Error checking service '{service_name}' in namespace '{namespace}': {e}"
         )
         return False
+
 
 def check_replicas_mismatch(namespace, deployment_name):
 
@@ -158,6 +159,7 @@ def check_replicas_mismatch(namespace, deployment_name):
         )
     return False
 
+
 def check_service_exists(namespace, service):
 
     # Check if a service exists in the given namespace.
@@ -167,7 +169,9 @@ def check_service_exists(namespace, service):
         text=True,
     )
     if output.returncode != 0:
-        logger.warning(f"Service '{service}' does not exist in namespace '{namespace}'.")
+        logger.warning(
+            f"Service '{service}' does not exist in namespace '{namespace}'."
+        )
         logger.newline()
         return False
     else:
@@ -267,7 +271,9 @@ def main():
                             if pod_ip:
                                 check_service_endpoints(gateway_id, namespace, pod_ip)
                             else:
-                                logger.warning(f"No valid pod IPs found for {gateway_id} in {namespace}.")
+                                logger.warning(
+                                    f"No valid pod IPs found for {gateway_id} in {namespace}."
+                                )
 
                             check_replicas_mismatch(namespace, deployment_name)
 
@@ -324,7 +330,6 @@ if __name__ == "__main__":
     global core_api, apps_api  # Declare core_api and apps_api as global variables to use them in other functions
     core_api = client.CoreV1Api(api_client)
     apps_api = client.AppsV1Api(api_client)
-    
 
     # Run the main function
     main()

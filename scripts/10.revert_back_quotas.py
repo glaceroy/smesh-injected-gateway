@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Filename      : revert_back_quotas.py
 Author        : Aiyaz Khan
@@ -9,11 +8,11 @@ Description   : This script will revert the resource quota memory and CPU to the
 
 import argparse
 import logging
+import os
 import subprocess
 import sys
 import types
 from datetime import datetime
-import os
 
 import yaml
 
@@ -41,7 +40,8 @@ def create_logger():
     )
     handler.setLevel(logging.DEBUG)
     formatter = logging.Formatter(
-        fmt="[%(asctime)s] %(levelname)8s : %(message)s", datefmt="%a, %d %b %Y %H:%M:%S"
+        fmt="[%(asctime)s] %(levelname)8s : %(message)s",
+        datefmt="%a, %d %b %Y %H:%M:%S",
     )
     blank_formatter = logging.Formatter(fmt="")
     handler.setFormatter(formatter)
@@ -62,6 +62,7 @@ def create_logger():
 
     return logger
 
+
 def display_current_values(namespace):
 
     output = subprocess.run(
@@ -79,7 +80,9 @@ def display_current_values(namespace):
         text=True,
     )
     if output.returncode != 0:
-        logger.error(f"Failed to retrieve current resource quota for namespace '{namespace}': {output.stderr}")
+        logger.error(
+            f"Failed to retrieve current resource quota for namespace '{namespace}': {output.stderr}"
+        )
         return False
 
     logger.info(f"Current resource quota :")
@@ -155,11 +158,15 @@ def revert_back_original(namespace):
 
     requests_cpu = backup_data.get("spec", {}).get("hard", {}).get("requests.cpu", "")
     limits_cpu = backup_data.get("spec", {}).get("hard", {}).get("limits.cpu", "")
-    requests_memory = backup_data.get("spec", {}).get("hard", {}).get("requests.memory", "")
+    requests_memory = (
+        backup_data.get("spec", {}).get("hard", {}).get("requests.memory", "")
+    )
     limits_memory = backup_data.get("spec", {}).get("hard", {}).get("limits.memory", "")
 
     logger.newline()
-    logger.info(f"Reverting back to original quota values from backup file '{fullpath}':")
+    logger.info(
+        f"Reverting back to original quota values from backup file '{fullpath}':"
+    )
     logger.info(f" - CPU Requests       : {requests_cpu} CPU")
     logger.info(f" - CPU Limits         : {limits_cpu} CPU")
     logger.info(f" - Memory Requests    : {requests_memory}")
@@ -174,7 +181,7 @@ def revert_back_original(namespace):
 
     if not dry_run:
         logger.info(f"Quota reverted successfully for namespace '{namespace}'.")
-        
+
     logger.newline()
     display_current_values(namespace)
 
@@ -279,7 +286,7 @@ def main():
 
 
 if __name__ == "__main__":
-    
+
     # Set global logger
     logger = create_logger()
 
@@ -296,9 +303,7 @@ if __name__ == "__main__":
     )
 
     if len(sys.argv) != 2:
-        logger.info(
-            "USAGE: python revert_back_quotas.py --dry-run (OR) --execute"
-        )
+        logger.info("USAGE: python revert_back_quotas.py --dry-run (OR) --execute")
         logger.error("Please provide the relevant input to run.")
         sys.exit(1)  # Exit with error status
 
@@ -306,8 +311,14 @@ if __name__ == "__main__":
     dry_run = args.dry_run
 
     if dry_run:
-        logger.info("********************************************************************")
-        logger.info("****       Running in DRY RUN MODE. No changes will be made.    ****")
-        logger.info("********************************************************************")
+        logger.info(
+            "********************************************************************"
+        )
+        logger.info(
+            "****       Running in DRY RUN MODE. No changes will be made.    ****"
+        )
+        logger.info(
+            "********************************************************************"
+        )
         logger.newline()
     main()

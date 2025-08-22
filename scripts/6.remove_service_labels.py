@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Filename      : remove_service_labels.py
 Author        : Aiyaz Khan
@@ -40,7 +39,8 @@ def create_logger():
     )
     handler.setLevel(logging.DEBUG)
     formatter = logging.Formatter(
-        fmt="[%(asctime)s] %(levelname)8s : %(message)s", datefmt="%a, %d %b %Y %H:%M:%S"
+        fmt="[%(asctime)s] %(levelname)8s : %(message)s",
+        datefmt="%a, %d %b %Y %H:%M:%S",
     )
     blank_formatter = logging.Formatter(fmt="")
     handler.setFormatter(formatter)
@@ -85,9 +85,7 @@ def validate_label_removal(namespace, service):
             f"Validation Complete - SMCP OWnership Label successfully removed from service '{service}' in namespace '{namespace}'"
         )
         logger.newline()
-        logger.info(
-            f"Service '{service}' has following labels AFTER removal: "
-        )
+        logger.info(f"Service '{service}' has following labels AFTER removal: ")
         for key, value in labels.items():
             logger.info(f" - {key}: {value}")
     else:
@@ -127,9 +125,7 @@ def remove_service_labels(namespace, service):
         labels = service_data.get("metadata", {}).get("labels", {})
 
         logger.newline()
-        logger.info(
-            f"Service '{service}' has following labels BEFORE removal: "
-        )
+        logger.info(f"Service '{service}' has following labels BEFORE removal: ")
         for key, value in labels.items():
             logger.info(f" - {key}: {value}")
 
@@ -171,7 +167,9 @@ def check_service_exists(namespace, service):
         text=True,
     )
     if output.returncode != 0:
-        logger.warning(f"Service '{service}' does not exist in namespace '{namespace}'.")
+        logger.warning(
+            f"Service '{service}' does not exist in namespace '{namespace}'."
+        )
         logger.newline()
         return False
     else:
@@ -289,9 +287,15 @@ if __name__ == "__main__":
     args = parser.parse_args()
     dry_run = args.dry_run
     if dry_run:
-        logger.info("********************************************************************")
-        logger.info("****       Running in DRY RUN MODE. No changes will be made.    ****")
-        logger.info("********************************************************************")
+        logger.info(
+            "********************************************************************"
+        )
+        logger.info(
+            "****       Running in DRY RUN MODE. No changes will be made.    ****"
+        )
+        logger.info(
+            "********************************************************************"
+        )
         logger.newline()
 
     main()

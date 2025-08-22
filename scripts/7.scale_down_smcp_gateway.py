@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Filename      : scale_down_smcp_gateway.py
 Author        : Aiyaz Khan
@@ -40,7 +39,8 @@ def create_logger():
     )
     handler.setLevel(logging.DEBUG)
     formatter = logging.Formatter(
-        fmt="[%(asctime)s] %(levelname)8s : %(message)s", datefmt="%a, %d %b %Y %H:%M:%S"
+        fmt="[%(asctime)s] %(levelname)8s : %(message)s",
+        datefmt="%a, %d %b %Y %H:%M:%S",
     )
     blank_formatter = logging.Formatter(fmt="")
     handler.setFormatter(formatter)
@@ -100,8 +100,10 @@ def scale_down_replicas(namespace, gateway):
         logger.info(f"Scaled deployment '{gateway}' to '{replicas}' replicas")
 
         replica_count = get_replica_count(namespace, gateway)
-        
-        logger.info(f"Current replica count for deployment '{gateway}' is '{replica_count}' replicas")
+
+        logger.info(
+            f"Current replica count for deployment '{gateway}' is '{replica_count}' replicas"
+        )
         logger.newline()
 
 
@@ -116,7 +118,7 @@ def get_replica_count(namespace, gateway):
             "-n",
             namespace,
             "-o",
-            "jsonpath='{.spec.replicas}'"
+            "jsonpath='{.spec.replicas}'",
         ],
         capture_output=True,
         text=True,
@@ -128,6 +130,7 @@ def get_replica_count(namespace, gateway):
         return None
 
     return int(output.stdout.strip().strip("'"))
+
 
 def check_namespace(namespace):
 
@@ -249,9 +252,15 @@ if __name__ == "__main__":
     args = parser.parse_args()
     dry_run = args.dry_run
     if dry_run:
-        logger.info("********************************************************************")
-        logger.info("****       Running in DRY RUN MODE. No changes will be made.    ****")
-        logger.info("********************************************************************")
+        logger.info(
+            "********************************************************************"
+        )
+        logger.info(
+            "****       Running in DRY RUN MODE. No changes will be made.    ****"
+        )
+        logger.info(
+            "********************************************************************"
+        )
         logger.newline()
 
     main()

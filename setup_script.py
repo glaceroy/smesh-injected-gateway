@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Filename      : setup_script.py
 Author        : Aiyaz Khan
@@ -7,8 +6,8 @@ Version       : 1.0
 Description   : This script will create cluster prefix folders and copy relevant scripts
 """
 
-import logging as log
 import argparse
+import logging as log
 import os
 import shutil
 import sys
@@ -23,6 +22,7 @@ formatter = log.Formatter(
 )
 sh.setFormatter(formatter)
 logger.addHandler(sh)
+
 
 def copy_scripts(cluster_prefix):
 
@@ -44,7 +44,7 @@ def copy_scripts(cluster_prefix):
         script_source = "./scripts"
         if not os.path.isdir(script_source):
             log.error(f"Script source directory {script_source} does not exist.")
-            sys.exit(1)  # Exit with error status 
+            sys.exit(1)  # Exit with error status
         script_fullpath = os.path.join(script_source, script)
         if not os.path.isfile(script_fullpath):
             log.error(f"Script {script} does not exist in {script_source}.")
