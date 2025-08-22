@@ -28,7 +28,7 @@ def copy_scripts(cluster_prefix):
 
     script_list = [
         "1.take_quota_backup.py",
-        "2.update_quotas.py",
+        "2.increase_quotas.py",
         "3.extract_namespaces.py",
         "4.enable_injected_gateway.py",
         "5.check_service_endpoints.py",
