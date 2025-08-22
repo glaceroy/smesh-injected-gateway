@@ -145,7 +145,6 @@ def main():
     logger.info(
         "============================   Starting Script Execution.  ============================"
     )
-    logger.newline()
 
     gateway_list = smcp["spec"]["gateways"]
 
@@ -155,6 +154,7 @@ def main():
                 namespace = smcp["spec"]["gateways"][gateway_type][gateway_id][
                     "namespace"
                 ]
+                logger.newline()
                 logger.info(
                     f"Disabling SMCP gateway: '{gateway_id}' in namespace: '{namespace}'"
                 )

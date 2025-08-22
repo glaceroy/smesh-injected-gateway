@@ -134,6 +134,11 @@ def main():
 
     logger.info("Cluster values config file is updated.. !")
     logger.newline()
+    logger.info("Next Steps: ")
+    logger.info(
+        " - Review the updated cluster values files and perform git push"
+    )
+    logger.newline()
     logger.info(
         "============================   Script Execution Completed.   ============================"
     )
