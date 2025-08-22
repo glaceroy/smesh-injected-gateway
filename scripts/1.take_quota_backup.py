@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Filename      : take_quota_backup.py
 Author        : Aiyaz Khan
@@ -8,11 +7,11 @@ Description   : This script will take a backup of the resource quotas for all na
 """
 
 import logging
+import os
 import subprocess
 import sys
 import types
 from datetime import datetime
-import os
 
 import yaml
 
@@ -40,7 +39,8 @@ def create_logger():
     )
     handler.setLevel(logging.DEBUG)
     formatter = logging.Formatter(
-        fmt="[%(asctime)s] %(levelname)8s : %(message)s", datefmt="%a, %d %b %Y %H:%M:%S"
+        fmt="[%(asctime)s] %(levelname)8s : %(message)s",
+        datefmt="%a, %d %b %Y %H:%M:%S",
     )
     blank_formatter = logging.Formatter(fmt="")
     handler.setFormatter(formatter)
@@ -83,7 +83,9 @@ def take_quota_backup(namespace):
     )
 
     if output.returncode != 0:
-        logger.error(f"Failed to get quotas for namespace '{namespace}': {output.stderr}")
+        logger.error(
+            f"Failed to get quotas for namespace '{namespace}': {output.stderr}"
+        )
         return
 
     quota_data = yaml.safe_load(output.stdout)
@@ -97,6 +99,7 @@ def take_quota_backup(namespace):
 
     logger.info(f"Quota backup for namespace '{namespace}' saved to '{fullname}'")
     logger.newline()
+
 
 def check_quota(namespace):
 
@@ -121,6 +124,7 @@ def check_quota(namespace):
         return False
     logger.info(f"Quota '{namespace}-quota' exists.")
     return True
+
 
 def check_namespace(namespace):
 

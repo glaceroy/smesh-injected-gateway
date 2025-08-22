@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Filename      : increase_quotas.py
 Author        : Aiyaz Khan
@@ -41,7 +40,8 @@ def create_logger():
     )
     handler.setLevel(logging.DEBUG)
     formatter = logging.Formatter(
-        fmt="[%(asctime)s] %(levelname)8s : %(message)s", datefmt="%a, %d %b %Y %H:%M:%S"
+        fmt="[%(asctime)s] %(levelname)8s : %(message)s",
+        datefmt="%a, %d %b %Y %H:%M:%S",
     )
     blank_formatter = logging.Formatter(fmt="")
     handler.setFormatter(formatter)
@@ -62,6 +62,7 @@ def create_logger():
 
     return logger
 
+
 def display_current_values(namespace):
 
     output = subprocess.run(
@@ -79,7 +80,9 @@ def display_current_values(namespace):
         text=True,
     )
     if output.returncode != 0:
-        logger.error(f"Failed to retrieve current resource quota for namespace '{namespace}': {output.stderr}")
+        logger.error(
+            f"Failed to retrieve current resource quota for namespace '{namespace}': {output.stderr}"
+        )
         return False
 
     logger.info(f"Resource quota AFTER UPDATE :")
@@ -187,7 +190,9 @@ def calculate_namespace_resources(namespace):
             logger.info("Resource quota BEFORE UPDATE :")
             logger.info(f" - CPU Requests       : {requests_cpu} CPU")
             logger.info(f" - CPU Limits         : {limits_cpu} CPU")
-            logger.info(f" - Memory Requests    : {requests_memory}{requests_memory_unit}")
+            logger.info(
+                f" - Memory Requests    : {requests_memory}{requests_memory_unit}"
+            )
             logger.info(f" - Memory Limits      : {limits_memory}{limits_memory_unit}")
 
             requests_cpu = op_func(requests_cpu, update_cpu_unit)
@@ -214,7 +219,7 @@ def calculate_namespace_resources(namespace):
                     f"Resource Quota for namespace '{namespace}' has been updated successfully."
                 )
                 logger.newline()
-                
+
                 display_current_values(namespace)
 
     else:
@@ -224,6 +229,7 @@ def calculate_namespace_resources(namespace):
             f"Result: Fail for namespace '{namespace}'. Manual intervention required to update the quota."
         )
         logger.newline()
+
 
 def check_quota(namespace):
 
@@ -248,6 +254,7 @@ def check_quota(namespace):
         return False
     logger.info(f"Quota '{namespace}-quota' exists.")
     return True
+
 
 def check_namespace(namespace):
 
@@ -340,9 +347,7 @@ if __name__ == "__main__":
     )
 
     if len(sys.argv) != 2:
-        logger.info(
-            "USAGE: python increase_quotas.py --dry-run (OR) --execute"
-        )
+        logger.info("USAGE: python increase_quotas.py --dry-run (OR) --execute")
         logger.error("Please provide the relevant input to run.")
         sys.exit(1)  # Exit with error status
 
@@ -350,9 +355,15 @@ if __name__ == "__main__":
     dry_run = args.dry_run
 
     if dry_run:
-        logger.info("********************************************************************")
-        logger.info("****       Running in DRY RUN MODE. No changes will be made.    ****")
-        logger.info("********************************************************************")
+        logger.info(
+            "********************************************************************"
+        )
+        logger.info(
+            "****       Running in DRY RUN MODE. No changes will be made.    ****"
+        )
+        logger.info(
+            "********************************************************************"
+        )
         logger.newline()
 
     main()
