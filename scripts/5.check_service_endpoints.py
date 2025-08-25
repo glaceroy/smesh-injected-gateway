@@ -163,52 +163,58 @@ def check_replicas_mismatch(namespace, deployment_name):
 def check_service_exists(namespace, service):
 
     # Check if a service exists in the given namespace.
-    output = subprocess.run(
-        ["oc", "get", "svc", service, "-n", namespace],
-        capture_output=True,
-        text=True,
-    )
-    if output.returncode != 0:
-        logger.warning(
-            f"Service '{service}' does not exist in namespace '{namespace}'."
-        )
-        logger.newline()
-        return False
-    else:
-        logger.info(f"Service '{service}' exists in namespace '{namespace}'.")
+    try:
+        service = core_api.read_namespaced_service(service, namespace)
+        logger.info(f"Service '{service.metadata.name}' exists in namespace '{namespace}'.")
         return True
+    except kubernetes.client.rest.ApiException as e:
+        if e.status == 404:
+            logger.warning(f"Service '{service}' not found in namespace '{namespace}'. Moving on !")
+        else:
+            logger.error(f"Error checking service '{service}' in namespace '{namespace}'")
+            logger.error("Error details: ")
+            logger.error(f" - Reason: {e.reason}")
+            logger.error(f" - Status: {e.status}")
+            logger.error(f" - Message: {e.body}")
+        return False
 
 
 def check_namespace(namespace):
 
-    # Check if a namespace exists.
-    output = subprocess.run(
-        ["oc", "get", "namespace", namespace],
-        capture_output=True,
-        text=True,
-    )
-    if output.returncode != 0:
-        logger.error(f"Namespace '{namespace}' does not exist.")
+    # Check if a namespace exists in the cluster.
+    try:
+        namespace = core_api.read_namespace(namespace)
+        logger.info(f"Namespace '{namespace.metadata.name}' exists.")
+        return True
+    except kubernetes.client.rest.ApiException as e:
+        if e.status == 404:
+            logger.warning(f"Namespace '{namespace}' not found. Moving on !")
+        else:
+            logger.error(f"Error checking namespace '{namespace}'")
+            logger.error("Error details: ")
+            logger.error(f" - Reason: {e.reason}")
+            logger.error(f" - Status: {e.status}")
+            logger.error(f" - Message: {e.body}")
         return False
-    logger.info(f"Namespace '{namespace}' exists.")
-    return True
 
 
 def check_deployment(namespace, gateway_id):
 
     # Check if a deployment exists in a given namespace.
-    output = subprocess.run(
-        ["oc", "get", "deployment", gateway_id, "-n", namespace],
-        capture_output=True,
-        text=True,
-    )
-    if output.returncode != 0:
-        logger.warning(
-            f"Deployment '{gateway_id}' does not exist in namespace '{namespace}'. Moving on!"
-        )
+    try:
+        deployment = apps_api.read_namespaced_deployment(gateway_id, namespace)
+        logger.info(f"Deployment '{deployment.metadata.name}' exists in namespace '{namespace}'.")
+        return True
+    except kubernetes.client.rest.ApiException as e:
+        if e.status == 404:
+            logger.warning(f"Deployment '{gateway_id}' not found in namespace '{namespace}'. Moving on !")
+        else:
+            logger.error(f"Error checking deployment '{gateway_id}' in namespace '{namespace}'")
+            logger.error("Error details: ")
+            logger.error(f" - Reason: {e.reason}")
+            logger.error(f" - Status: {e.status}")
+            logger.error(f" - Message: {e.body}")
         return False
-    logger.info(f"Deployment '{gateway_id}' exists in namespace '{namespace}'.")
-    return True
 
 
 def check_login():
