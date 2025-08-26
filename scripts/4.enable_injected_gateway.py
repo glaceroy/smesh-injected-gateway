@@ -136,7 +136,7 @@ def main():
     logger.newline()
     logger.info("Next Steps: ")
     logger.info(
-        " - Review the updated cluster values files and perform a git push (devops clusters) or"
+        " - Review the updated cluster values files and perform a git operations (devops clusters) or"
     )
     logger.info(" - run the ansible script to deploy injected gateway")
     logger.newline()
