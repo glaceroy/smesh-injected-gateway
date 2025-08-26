@@ -1,9 +1,9 @@
 """
-Filename      : take_quota_backup.py
+Filename      : backup_quota_and_service.py
 Author        : Aiyaz Khan
 Maintained by : Kyndryl Engineering
 Version       : 1.0
-Description   : This script will take a backup of the resource quotas for all namespaces in smmr.
+Description   : This script will take a backup of the resource quotas and services for all namespaces in smmr.
 """
 
 import logging
@@ -33,7 +33,7 @@ def create_logger():
     # Create a handler
     sh = logging.StreamHandler(sys.stdout)
     handler = logging.FileHandler(
-        f"./logs/{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}_take_quota_backup.log",
+        f"./logs/{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}_backup_quota_and_service.log",
         mode="w",
         encoding="utf-8",
     )
@@ -60,6 +60,36 @@ def create_logger():
     logger.newline = types.MethodType(log_newline, logger)
 
     return logger
+
+
+def take_service_backup(namespace, gateway_id):
+
+    service_name = f"{gateway_id}"
+    output = subprocess.run(
+        ["oc", "get", "service", service_name, "-n", namespace, "-o", "yaml"],
+        capture_output=True,
+        text=True,
+    )
+
+    if output.returncode != 0:
+        logger.error(
+            f"Failed to get service '{service_name}' in namespace '{namespace}': {output.stderr}"
+        )
+        return
+
+    service_data = yaml.safe_load(output.stdout)
+
+    # Save the service data to a file
+    filepath = "./backups/service"
+    filename = f"{namespace}_{gateway_id}_service_backup.yaml"
+    fullname = os.path.join(filepath, filename)
+    with open(fullname, "w") as file:
+        yaml.dump(service_data, file)
+
+    logger.info(
+        f"Service backup for '{service_name}' in namespace '{namespace}' saved to '{fullname}'"
+    )
+    logger.newline()
 
 
 def take_quota_backup(namespace):
@@ -91,14 +121,29 @@ def take_quota_backup(namespace):
     quota_data = yaml.safe_load(output.stdout)
 
     # Save the quota data to a file
-    filepath = "./backups/"
+    filepath = "./backups/quota"
     filename = f"{namespace}_quota_backup.yaml"
     fullname = os.path.join(filepath, filename)
     with open(fullname, "w") as file:
         yaml.dump(quota_data, file)
 
     logger.info(f"Quota backup for namespace '{namespace}' saved to '{fullname}'")
-    logger.newline()
+
+
+def check_service(namespace, gateway_id):
+
+    # Check if a service exists for the given namespace.
+    output = subprocess.run(
+        ["oc", "get", "service", gateway_id, "-n", namespace, "-o", "yaml"],
+        capture_output=True,
+        text=True,
+    )
+    if output.returncode != 0:
+        logger.error(f"Service '{gateway_id}' does not exist.")
+        logger.newline()
+        return False
+    logger.info(f"Service '{gateway_id}' exists.")
+    return True
 
 
 def check_quota(namespace):
@@ -159,13 +204,13 @@ def main():
 
     check_login()
 
-    # Read SMMR configuration from the OpenShift cluster.
+    # Read SMCP configuration from the OpenShift cluster.
     output = subprocess.run(
         [
             "oc",
             "get",
-            "smmr",
-            "default",
+            "smcp",
+            "app-mesh-01",
             "-n",
             "istio-system",
             "-o",
@@ -173,26 +218,35 @@ def main():
         ],
         capture_output=True,
     )
-    smmr = yaml.safe_load(output.stdout)
+    smcp = yaml.safe_load(output.stdout)
 
     logger.info(
         "============================   Starting Script Execution.  ============================"
     )
-    logger.newline()
-    members_list = smmr["spec"]["members"]
 
-    for members in members_list:
-        # Check if namespace exists
-        if check_namespace(members):
-            # Check if quota exists in the namespace
-            if check_quota(members):
-                # Taking a backup of current quota
-                take_quota_backup(members)
+    gateway_list = smcp["spec"]["gateways"]
 
-            logger.info(
-                "====================================================================================="
-            )
-            logger.newline()
+    for gateway_type in gateway_list:
+        if gateway_type in ["additionalEgress", "additionalIngress"]:
+            for gateway_id in smcp["spec"]["gateways"][gateway_type]:
+                namespace = smcp["spec"]["gateways"][gateway_type][gateway_id][
+                    "namespace"
+                ]
+
+                logger.newline()
+                # Check if namespace exists
+                if check_namespace(namespace):
+                    # Check if quota exists in the namespace
+                    if check_quota(namespace):
+                        # Taking a backup of current quota
+                        take_quota_backup(namespace)
+                        # Taking a backup of k8s service if it exists
+                        if check_service(namespace, gateway_id):
+                            take_service_backup(namespace, gateway_id)
+
+                            logger.info(
+                                "====================================================================================="
+                            )
 
     logger.info(
         "============================   Script Execution Completed.   ============================"

@@ -27,7 +27,7 @@ logger.addHandler(sh)
 def copy_scripts(cluster_prefix):
 
     script_list = [
-        "1.take_quota_backup.py",
+        "1.backup_quota_and_service.py",
         "2.increase_quotas.py",
         "3.extract_namespaces.py",
         "4.enable_injected_gateway.py",
@@ -57,16 +57,14 @@ def copy_scripts(cluster_prefix):
 
 def create_directory(cluster_prefix):
 
-    folder_list = [cluster_prefix, "logs", "backups"]
+    folder_list = [cluster_prefix, "logs", "backups/quota", "backups/service"]
     for folder in folder_list:
         if folder is cluster_prefix:
             dirpath = os.path.join("./", folder)
         else:
             dirpath = os.path.join(f"{cluster_prefix}", folder)
         try:
-            os.mkdir(dirpath)
-        except FileExistsError:
-            log.info(f"Directory {dirpath} already exists")
+            os.makedirs(dirpath, exist_ok=True)
         except Exception as e:
             log.error(f"Failed to create directory {dirpath}: {e}")
         else:

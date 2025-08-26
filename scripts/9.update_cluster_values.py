@@ -136,7 +136,7 @@ def main():
     logger.newline()
     logger.info("Next Steps: ")
     logger.info(
-        " - Review the updated cluster values files and perform git push"
+        " - Review the updated cluster values files and perform git operations"
     )
     logger.newline()
     logger.info(
