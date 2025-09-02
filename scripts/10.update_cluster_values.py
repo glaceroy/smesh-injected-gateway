@@ -116,7 +116,6 @@ def main():
                     if key == "egress":
                         if (
                             cluster_values["project"][ns_index]["egress"]["enabled"]
-                            == True
                         ):
                             cluster_values["project"][ns_index]["egress"][
                                 "enabled"
@@ -124,7 +123,6 @@ def main():
                     elif key == "ingress":
                         if (
                             cluster_values["project"][ns_index]["ingress"]["enabled"]
-                            == True
                         ):
                             cluster_values["project"][ns_index]["ingress"][
                                 "enabled"
