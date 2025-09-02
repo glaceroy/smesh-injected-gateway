@@ -12,7 +12,6 @@ import os
 import sys
 import types
 from datetime import datetime
-from pathlib import Path
 
 from ruamel.yaml import YAML
 
