@@ -114,18 +114,12 @@ def main():
             if ns == namespace["namespace"]:
                 for index, key in enumerate(namespace):
                     if key == "egress":
-                        if (
-                            cluster_values["project"][ns_index]["egress"]["enabled"]
-                            == True
-                        ):
+                        if cluster_values["project"][ns_index]["egress"]["enabled"]:
                             cluster_values["project"][ns_index]["egress"][
                                 "injected_egress"
                             ] = True
                     elif key == "ingress":
-                        if (
-                            cluster_values["project"][ns_index]["ingress"]["enabled"]
-                            == True
-                        ):
+                        if cluster_values["project"][ns_index]["ingress"]["enabled"]:
                             cluster_values["project"][ns_index]["ingress"][
                                 "injected_ingress"
                             ] = True
