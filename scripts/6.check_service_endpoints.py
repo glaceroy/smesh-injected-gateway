@@ -13,10 +13,12 @@ import subprocess
 import sys
 import types
 from datetime import datetime
+from urllib3.exceptions import InsecureRequestWarning
+import requests
 
 import kubernetes.client.rest
 import yaml
-from kubernetes import client, config
+from kubernetes import client
 
 
 def log_newline(self, how_many_lines=1):
@@ -183,6 +185,7 @@ def check_namespace(namespace):
 
     # Check if a namespace exists in the cluster.
     try:
+        requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
         namespace = core_api.read_namespace(namespace)
         logger.info(f"Namespace '{namespace.metadata.name}' exists.")
         return True

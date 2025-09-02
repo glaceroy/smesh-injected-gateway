@@ -108,10 +108,10 @@ def set_silence(auth_token):
 
     silence = 12
 
-    os.environ['TZ'] = 'Europe/London'
+    os.environ['TZ'] = 'UTC'
     time.tzset()
 
-    start_time = (datetime.now() - timedelta(minutes=1)).isoformat() + "Z"
+    start_time = (datetime.now()).isoformat() + "Z"
     end_time = (datetime.now() + timedelta(hours=silence)).isoformat() + "Z"
 
     alert_host = get_alert_host()
@@ -138,8 +138,6 @@ def set_silence(auth_token):
         }
     })
 
-    logger.info(f"Sending silence payload to {alert_host}...")
-
     url = f"https://{alert_host}/api/v1/silences"
 
     # Disable warnings for certificate verification
@@ -147,7 +145,7 @@ def set_silence(auth_token):
     response = requests.request("POST", url, headers=headers, data=payload_data, verify=False)
 
     if response.status_code == 200:
-        logger.info("Silence created successfully")
+        logger.info(f"Silence alert created until {end_time}")
         logger.info(f" - Silence ID: {response.json().get('data').get('silenceId')}")
     else:
         logger.error(f"Failed to create silence: {response.status_code} - {response.text}")
@@ -206,6 +204,10 @@ def get_auth_token():
 
     # Get the user authentication token.
     try:
+        subprocess.check_output(
+            ["oc", "whoami"],
+            stderr=subprocess.STDOUT,
+        )
         output = subprocess.check_output(
             ["oc", "whoami", "-t"], stderr=subprocess.STDOUT
         )
@@ -256,9 +258,6 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-
-    logger.info(f"Action selected: {args.action}")
-
     if not args.action:
         logger.info("USAGE: python silence.py --action <create|delete>")
         logger.error("Please provide the relevant input to run.")

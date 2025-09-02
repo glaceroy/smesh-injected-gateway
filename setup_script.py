@@ -27,16 +27,18 @@ logger.addHandler(sh)
 def copy_scripts(cluster_prefix):
 
     script_list = [
-        "1.backup_quota_and_service.py",
-        "2.increase_quotas.py",
-        "3.extract_namespaces.py",
-        "4.enable_injected_gateway.py",
-        "5.check_service_endpoints.py",
-        "6.remove_service_labels.py",
-        "7.scale_down_smcp_gateway.py",
-        "8.disable_smcp_gateway.py",
-        "9.update_cluster_values.py",
-        "10.revert_back_quotas.py",
+        "1.silence.py",
+        "2.backup_quota_and_service.py",
+        "3.increase_quotas.py",
+        "4.extract_namespaces.py",
+        "5.enable_injected_gateway.py",
+        "6.check_service_endpoints.py",
+        "7.remove_service_labels.py",
+        "8.scale_down_smcp_gateway.py",
+        "9.disable_smcp_gateway.py",
+        "10.update_cluster_values.py",
+        "11.revert_back_quotas.py",
+        "12.reapply_smcp_labels.py",
     ]
 
     log.info("")
