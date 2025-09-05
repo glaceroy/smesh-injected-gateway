@@ -8,6 +8,7 @@ Description   : This script compares the replicas defined in the cluster values 
 """
 
 import logging
+import os
 import subprocess
 import sys
 import types
@@ -39,7 +40,8 @@ def create_logger():
     )
     handler.setLevel(logging.DEBUG)
     formatter = logging.Formatter(
-        fmt="[%(asctime)s] %(levelname)8s : %(message)s", datefmt="%a, %d %b %Y %H:%M:%S"
+        fmt="[%(asctime)s] %(levelname)8s : %(message)s",
+        datefmt="%a, %d %b %Y %H:%M:%S",
     )
     blank_formatter = logging.Formatter(fmt="")
     handler.setFormatter(formatter)
@@ -60,8 +62,9 @@ def create_logger():
 
     return logger
 
+
 def get_total_namespaces():
-    
+
     output = subprocess.run(
         [
             "oc",
@@ -77,11 +80,12 @@ def get_total_namespaces():
     )
     smmr = yaml.safe_load(output.stdout)
     members_list = smmr["spec"]["members"]
-    
+
     return len(members_list)
 
+
 def get_values_replicas(ns, gateway_type, values_file):
-    
+
     replicas = None
 
     # Read the replicas for a given gateway from the values file.
@@ -94,7 +98,9 @@ def get_values_replicas(ns, gateway_type, values_file):
                 if gateway_type == "additionalEgress":
                     replicas = cluster_values["project"][ns_index]["egress"]["replicas"]
                 else:
-                    replicas = cluster_values["project"][ns_index]["ingress"]["replicas"]
+                    replicas = cluster_values["project"][ns_index]["ingress"][
+                        "replicas"
+                    ]
 
     return replicas
 
@@ -142,7 +148,7 @@ def check_namespace(namespace):
     if output.returncode != 0:
         logger.error(f"Namespace {namespace} does not exist.")
         return False
-    logger.info(f"Namespace {namespace} exists.")
+
     return True
 
 
@@ -180,6 +186,10 @@ def main():
 
     check_login()
 
+    if not os.path.isfile(values_file):
+        logger.error(f"Required input file {values_file} does not exist. Exiting.. !")
+        sys.exit(1)
+
     # Read SMCP configuration from the OpenShift cluster.
     output = subprocess.run(
         [
@@ -201,14 +211,16 @@ def main():
     )
 
     namespace_mismatch = 0
-    ns_list = {}
-    
+    ns_list = []
+
     gateway_list = smcp["spec"]["gateways"]
 
     for gateway_type in gateway_list:
         if gateway_type in ["additionalEgress", "additionalIngress"]:
             for gateway_id in smcp["spec"]["gateways"][gateway_type]:
-                namespace = smcp["spec"]["gateways"][gateway_type][gateway_id]["namespace"]
+                namespace = smcp["spec"]["gateways"][gateway_type][gateway_id][
+                    "namespace"
+                ]
 
                 logger.newline()
                 # Check if namespace exists
@@ -217,43 +229,53 @@ def main():
                     if check_deployment(namespace, gateway_id):
                         # Get current replicas
                         cluster_replicas = get_cluster_replicas(namespace, gateway_id)
-                        values_replicas = get_values_replicas(namespace, gateway_type, values_file)
+                        values_replicas = get_values_replicas(
+                            namespace, gateway_type, values_file
+                        )
                         if cluster_replicas != values_replicas:
-                            namespace_mismatch = namespace_mismatch + 1
-                            ns_list[namespace] = gateway_id
+                            ns_list.append({namespace: gateway_id})
                             logger.error(
                                 f"MISMATCH - Replicas for deployment {gateway_id} in namespace {namespace}"
                             )
-                            logger.error(
-                                f"  - Cluster has {cluster_replicas} replicas"
-                            )
+                            logger.error(f"  - Cluster has {cluster_replicas} replicas")
                             logger.error(
                                 f"  - Values file has {values_replicas} replicas"
                             )
-                                                        
+
                         else:
                             logger.info(
                                 f"MATCH - Replicas for deployment {gateway_id} in namespace {namespace}"
                             )
-                            logger.info(
-                                f"  - Cluster has {cluster_replicas} replicas"
-                            )
+                            logger.info(f"  - Cluster has {cluster_replicas} replicas")
                             logger.info(
                                 f"  - Values file has {values_replicas} replicas"
                             )
-                            
+
                         logger.newline()
                         logger.info(
-                                "====================================================================================="
-                            )
+                            "====================================================================================="
+                        )
 
     total_namespaces = get_total_namespaces()
-    
+
+    # sorting the list of namespaces with mismatches
+    ns_list = sorted(ns_list, key=lambda x: list(x.keys())[0])
+
+    namespace_mismatch = len(set([list(item.keys())[0] for item in ns_list]))
+
     logger.newline()
-    logger.info(f"Total servicemesh member namespaces in the cluster: {total_namespaces}")
-    logger.info(f"Total servicemesh member namespaces with replica mismatches: {namespace_mismatch}")
-    for k, v in ns_list.items():
-        logger.info(f"  - Namespace: {k} \t Gateway: {v}")
+    logger.info(
+        f"Total servicemesh member namespaces in the cluster: {total_namespaces}"
+    )
+    logger.info(
+        f"Total servicemesh member namespaces with replica mismatches: {namespace_mismatch}"
+    )
+    logger.newline()
+    logger.info(f"\t\t{'NAMESPACE':<50}\t{' : ':<2}\t{'GATEWAY_ID':<10}")
+    for item in ns_list:
+        logger.info(
+            f"\t\t{list(item.keys())[0]:<50}\t{' : ':<2}\t{list(item.values())[0]:<10}"
+        )
 
     logger.newline()
     logger.info(
@@ -264,15 +286,13 @@ def main():
 if __name__ == "__main__":
     # Set global logger
     logger = create_logger()
-    
+
     # Check if two arguments are provided (not counting the script name)
     if len(sys.argv) != 2:
-        logger.info(
-            "USAGE: python compare_replicas.py <cluster_values.yaml>"
-        )
+        logger.info("USAGE: python compare_replicas.py <cluster_values.yaml>")
         logger.error("Please provide full path for the cluster values file.")
         sys.exit(1)  # Exit with error status
 
     values_file = sys.argv[1]
-    
+
     main()

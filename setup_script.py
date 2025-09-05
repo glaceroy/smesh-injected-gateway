@@ -11,7 +11,6 @@ import logging as log
 import os
 import shutil
 import sys
-from datetime import datetime
 
 logger = log.getLogger("")
 logger.setLevel(log.DEBUG)
@@ -27,15 +26,15 @@ logger.addHandler(sh)
 def copy_scripts(cluster_prefix):
 
     script_list = [
-        "1.silence.py",
-        "2.backup_quota_and_service.py",
-        "3.increase_quotas.py",
-        "4.extract_namespaces.py",
-        "5.enable_injected_gateway.py",
-        "6.check_service_endpoints.py",
-        "7.remove_service_labels.py",
-        "8.scale_down_smcp_gateway.py",
-        "9.disable_smcp_gateway.py",
+        "01.silence.py",
+        "02.backup_quota_and_service.py",
+        "03.increase_quotas.py",
+        "04.extract_namespaces.py",
+        "05.enable_injected_gateway.py",
+        "06.check_service_endpoints.py",
+        "07.remove_service_labels.py",
+        "08.scale_down_smcp_gateway.py",
+        "09.disable_smcp_gateway.py",
         "10.update_cluster_values.py",
         "11.revert_back_quotas.py",
         "12.reapply_smcp_labels.py",
@@ -43,7 +42,7 @@ def copy_scripts(cluster_prefix):
 
     log.info("")
     for script in script_list:
-        script_source = "./scripts"
+        script_source = "./implementation_scripts"
         if not os.path.isdir(script_source):
             log.error(f"Script source directory {script_source} does not exist.")
             sys.exit(1)  # Exit with error status
