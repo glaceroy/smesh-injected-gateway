@@ -100,6 +100,9 @@ def delete_silence(auth_token):
         with sqlite3.connect('silence_id.db') as connection:
             cursor = connection.cursor()
             cursor.execute("DROP TABLE IF EXISTS alert_id") 
+            
+        # Delete the database
+        os.remove('silence_id.db')
     else:
         logger.error(f"Failed to delete silence {silence_id}: {response.status_code} - {response.text}")
 
