@@ -57,7 +57,7 @@ def update_git_repository(repo_path):
         log.info("Successfully copied chart to the repository.")
     
         # Update ansible playbook
-        playbook_source = "./charts/enroll-namespaces.yml"
+        playbook_source = "./playbook/enroll-namespaces.yml"
         playbook_destination = os.path.join(repo_path, "project-mesh-onboarding/roles/charts/tasks")
         shutil.copy2(playbook_source, playbook_destination)
                 
