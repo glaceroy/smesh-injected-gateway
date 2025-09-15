@@ -37,7 +37,7 @@ def git_push(repo_path):
         os.system("git add .")
         os.system('git commit -m "Updated injected gateway charts and configurations"')
         os.system("git push origin feature/injected-gateway-migration")
-        log.info("Successfully pushed updates to the git repository.")
+        log.info("Successfully raised a PR with the changes.")
     except Exception as e:  
         log.error(f"An error occurred during git operations: {e}")
         
@@ -50,18 +50,12 @@ def update_git_repository(repo_path):
             return
 
         charts_source = "./charts/service-mesh-injected-gateway"
-
-        charts_destination = os.path.join(repo_path, "project-mesh-onboarding/charts")
+        charts_destination = os.path.join(repo_path, "project-mesh-onboarding/charts/service-mesh-injected-gateway")
         
-
-        # Copy charts
-        if os.path.exists(charts_destination):
-            shutil.rmtree(charts_destination)
-        shutil.copytree(charts_source, charts_destination)
-
+        shutil.copytree(charts_source, charts_destination, dirs_exist_ok=True)
 
         log.info("Successfully copied chart to the repository.")
-        
+    
         # Update ansible playbook
         playbook_source = "./charts/enroll-namespaces.yml"
         playbook_destination = os.path.join(repo_path, "project-mesh-onboarding/roles/charts/tasks")
