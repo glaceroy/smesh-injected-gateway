@@ -1,0 +1,10 @@
+{{- range $project := .Values.project }}
+{{- if $project.ingress.injected_ingress }}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: injected-gateway-ingress-sa
+  namespace: {{ $project.namespace }}
+{{- end }}
+{{- end }}

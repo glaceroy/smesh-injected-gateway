@@ -1,0 +1,29 @@
+{{- range $project := .Values.project }}
+{{- if $project.ingress.create_service }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ig{{ $project.ingress.id | toString }}
+  namespace: {{ $project.namespace }}
+spec:
+  ports:
+  - name: status-port
+    port: 15021
+    protocol: TCP
+    targetPort: 15021
+  - name: http2
+    port: 80
+    protocol: TCP
+    targetPort: 8080
+  - name: https
+    port: 443
+    protocol: TCP
+    targetPort: 8443
+  selector:
+    app: ig{{ $project.ingress.id | toString }}
+    istio: ingressgateway
+  sessionAffinity: None
+  type: ClusterIP
+{{- end }}
+{{- end }}

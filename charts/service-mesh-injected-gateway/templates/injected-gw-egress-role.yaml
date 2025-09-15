@@ -1,0 +1,14 @@
+{{- range $project := .Values.project }}
+{{- if $project.egress.injected_egress }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: injected-gateway-egress-role
+  namespace: {{ $project.namespace }}
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "watch", "list"]
+{{- end }}
+{{- end }}

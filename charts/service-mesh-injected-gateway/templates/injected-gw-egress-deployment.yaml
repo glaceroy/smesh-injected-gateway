@@ -1,0 +1,69 @@
+{{- range $project := .Values.project }}
+{{- if $project.egress.injected_egress }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: eg{{ $project.egress.id | toString }}-gateway
+  namespace: {{ $project.namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+spec:
+  replicas: {{ $project.egress.replicas | default 1 }}
+  selector:
+    matchLabels:
+      app: eg{{ $project.egress.id | toString }}
+      istio: egressgateway
+      type: injectedgateway
+  template:
+    metadata:
+      annotations:
+        inject.istio.io/templates: gateway
+      labels:
+        app: eg{{ $project.egress.id | toString }}
+        istio: egressgateway
+        type: injectedgateway
+        sidecar.istio.io/inject: "true" 
+    spec:
+      serviceAccountName: injected-gateway-egress-sa
+      containers:
+      - name: istio-proxy
+        image: auto 
+        ports:
+        - containerPort: 8080
+          name: http2
+          protocol: TCP
+        - containerPort: 8443
+          name: https
+          protocol: TCP
+        - containerPort: 15021
+          name: status-port
+          protocol: TCP
+        livenessProbe:
+          httpGet:
+            path: /healthz/ready
+            port: 15021
+            scheme: HTTP
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /healthz/ready
+            port: 15021
+            scheme: HTTP
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          successThreshold: 2
+          timeoutSeconds: 5
+        resources:
+          {{- with $project.egress.limits }}
+          limits:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $project.egress.requests }}
+          requests:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+{{- end }}
+{{- end }}

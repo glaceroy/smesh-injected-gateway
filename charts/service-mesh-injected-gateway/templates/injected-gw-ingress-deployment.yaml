@@ -1,0 +1,73 @@
+{{- range $project := .Values.project }}
+{{- if $project.ingress.injected_ingress }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ig{{ $project.ingress.id | toString }}-gateway
+  namespace: {{ $project.namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+spec:
+  replicas: {{ $project.ingress.replicas | default 1 }}
+  selector:
+    matchLabels:
+      app: ig{{ $project.ingress.id | toString }}
+      istio: ingressgateway
+      type: injectedgateway
+  template:
+    metadata:
+      annotations:
+        inject.istio.io/templates: gateway
+      labels:
+        app: ig{{ $project.ingress.id | toString }}
+        istio: ingressgateway
+        type: injectedgateway
+        sidecar.istio.io/inject: "true" 
+    spec:
+      serviceAccountName: injected-gateway-ingress-sa
+      containers:
+      - name: istio-proxy
+        image: auto 
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+          name: http2
+          protocol: TCP
+        - containerPort: 8443
+          name: https
+          protocol: TCP
+        - containerPort: 15021
+          name: status-port
+          protocol: TCP
+        - containerPort: 15090
+          name: http-envoy-prom
+          protocol: TCP        
+        livenessProbe:
+          httpGet:
+            path: /healthz/ready
+            port: 15021
+            scheme: HTTP
+          initialDelaySeconds: 5
+          periodSeconds: 2
+        readinessProbe:
+          failureThreshold: 30
+          httpGet:
+            path: /healthz/ready
+            port: 15021
+            scheme: HTTP
+          initialDelaySeconds: 1
+          periodSeconds: 2
+          successThreshold: 1
+          timeoutSeconds: 1
+        resources:
+          {{- with $project.ingress.limits }}
+          limits:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $project.ingress.requests }}
+          requests:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+{{- end }}
+{{- end }}

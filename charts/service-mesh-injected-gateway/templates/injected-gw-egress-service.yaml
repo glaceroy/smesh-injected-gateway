@@ -1,0 +1,25 @@
+{{- range $project := .Values.project }}
+{{- if $project.egress.create_service }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: eg{{ $project.egress.id | toString }}
+  namespace: {{ $project.namespace }}
+spec:
+  ports:
+  - name: http2
+    port: 80
+    protocol: TCP
+    targetPort: 8080
+  - name: https
+    port: 443
+    protocol: TCP
+    targetPort: 8443
+  selector:
+    app: eg{{ $project.egress.id | toString }}
+    istio: egressgateway
+  sessionAffinity: None
+  type: ClusterIP
+{{- end }}
+{{- end }}
