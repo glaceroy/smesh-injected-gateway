@@ -3,17 +3,22 @@ Filename      : remove_service_labels.py
 Author        : Aiyaz Khan
 Maintained by : Kyndryl Engineering
 Version       : 1.0
-Description   : This script removes the ownership labels in a service.
+Description   : This script removes the SMCP operator ownership labels in ingress/egress k8s service.
 """
 
-import argparse
+
 import logging
+import os
 import subprocess
 import sys
 import types
 from datetime import datetime
+from urllib3.exceptions import InsecureRequestWarning
+import requests
 
+import kubernetes.client.rest
 import yaml
+from kubernetes import client
 
 
 def log_newline(self, how_many_lines=1):
@@ -61,138 +66,97 @@ def create_logger():
 
     return logger
 
-
-def validate_label_removal(namespace, service):
-
-    # Validate that the labels have been removed from the service.
-    output = subprocess.run(
-        ["oc", "get", "svc", service, "-n", namespace, "-o", "yaml"],
-        capture_output=True,
-        text=True,
-    )
-    if output.returncode != 0:
-        logger.error(
-            f"Failed to get service '{service}' in namespace '{namespace}': {output.stderr}"
-        )
-        sys.exit(1)
-
-    service_data = yaml.safe_load(output.stdout)
-    labels = service_data.get("metadata", {}).get("labels", {})
-
-    if "app.kubernetes.io/managed-by" not in labels:
-        logger.newline()
-        logger.info(
-            f"Validation Complete - SMCP OWnership Label successfully removed from service '{service}' in namespace '{namespace}'"
-        )
-        logger.newline()
-        logger.info(f"Service '{service}' has following labels AFTER removal: ")
-        for key, value in labels.items():
-            logger.info(f" - {key}: {value}")
-    else:
-        logger.newline()
-        logger.error(
-            f"SMCP OWnership Label still present on service '{service}' in namespace '{namespace}'"
-        )
-
-    logger.newline()
-
-
-def remove_service_labels(namespace, service):
-
-    # If dry run is enabled, just log the action and return.
-    if dry_run:
-        # Simulate the command output for dry run
-        output = subprocess.CompletedProcess(
-            args=[],
-            returncode=0,
-            stdout=f"oc label svc {service} -n {namespace} --overwrite app.kubernetes.io/managed-by-",
-        )
-        logger.info(f"DRY RUN Command: '{output.stdout}'")
-        logger.newline()
-    else:
-        output = subprocess.run(
-            ["oc", "get", "svc", service, "-n", namespace, "-o", "yaml"],
-            capture_output=True,
-            text=True,
-        )
-        if output.returncode != 0:
-            logger.error(
-                f"Failed to get service '{service}' in namespace '{namespace}': {output.stderr}"
-            )
-            sys.exit(1)
-
-        service_data = yaml.safe_load(output.stdout)
-        labels = service_data.get("metadata", {}).get("labels", {})
-
-        logger.newline()
-        logger.info(f"Service '{service}' has following labels BEFORE removal: ")
-        for key, value in labels.items():
-            logger.info(f" - {key}: {value}")
-
-        # Remove specific labels from a service in the given namespace.
-        output = subprocess.run(
-            [
-                "oc",
-                "label",
-                "svc",
-                service,
-                "-n",
-                namespace,
-                "--overwrite",
-                "app.kubernetes.io/managed-by-",
-            ],
-            capture_output=True,
-            text=True,
-        )
-        if output.returncode != 0:
-            logger.newline()
-            logger.error(
-                f"Failed to remove SMCP Ownership label from service '{service}' in namespace '{namespace}': {output.stderr}"
-            )
-            sys.exit(1)
-        else:
-            logger.newline()
+def service_labels_exists(namespace, service):
+    
+    # Check if the specified service in the given namespace has the SMCP operator ownership labels.
+    try:
+        svc = core_api.read_namespaced_service(service, namespace)
+        labels = svc.metadata.labels
+        if labels and "app.kubernetes.io/managed-by: maistra-istio-operator" in labels:
             logger.info(
-                f"SMCP OWnership Label \"app.kubernetes.io/managed-by\" removed from service '{service}' in namespace '{namespace}'"
+                f"Service '{service}' in namespace '{namespace}' has the label 'app.kubernetes.io/managed-by: maistra-istio-operator'."
             )
+            return True
+        else:
+            logger.info(
+                f"Service '{service}' in namespace '{namespace}' does not have the label 'app.kubernetes.io/managed-by: maistra-istio-operator'."
+            )
+            return False
+    except kubernetes.client.rest.ApiException as e:
+        logger.error(
+            f"Error checking labels for service '{service}' in namespace '{namespace}'"
+        )
+        logger.error("Error details: ")
+        logger.error(f" - Reason: {e.reason}")
+        logger.error(f" - Status: {e.status}")
+        logger.error(f" - Message: {e.body}")
+        return False
 
+def remove_service_label(namespace, service):
+    
+    # Remove the SMCP operator ownership labels from the specified service in the given namespace.
+    try:
+        body = {
+            "metadata": {
+                "labels": {
+                    "app.kubernetes.io/managed-by": None,
+                }
+            }
+        }
+        core_api.patch_namespaced_service(
+            name=service,
+            namespace=namespace,
+            body=body,
+        )
+        logger.info(
+            f"Labels removed successfully from service '{service}' in namespace '{namespace}'."
+        )
+    except kubernetes.client.rest.ApiException as e:
+        logger.error(
+            f"Error removing labels from service '{service}' in namespace '{namespace}'"
+        )
+        logger.error("Error details: ")
+        logger.error(f" - Reason: {e.reason}")
+        logger.error(f" - Status: {e.status}")
+        logger.error(f" - Message: {e.body}")
 
 def check_service_exists(namespace, service):
 
     # Check if a service exists in the given namespace.
-
-    output = subprocess.run(
-        ["oc", "get", "svc", service, "-n", namespace],
-        capture_output=True,
-        text=True,
-    )
-    if output.returncode != 0:
-        logger.warning(
-            f"Service '{service}' does not exist in namespace '{namespace}'."
-        )
-        logger.newline()
-        return False
-    else:
-        logger.info(f"Service '{service}' exists in namespace '{namespace}'.")
+    try:
+        service = core_api.read_namespaced_service(service, namespace)
+        logger.info(f"Service '{service.metadata.name}' exists in namespace '{namespace}'.")
         return True
-
-
-def check_namespace_exists(namespace):
-
-    # Check if a namespace exists.
-
-    output = subprocess.run(
-        ["oc", "get", "namespace", namespace],
-        capture_output=True,
-        text=True,
-    )
-    if output.returncode != 0:
-        logger.warning(f"Namespace '{namespace}' does not exist.")
-        logger.newline()
+    except kubernetes.client.rest.ApiException as e:
+        if e.status == 404:
+            logger.warning(f"Service '{service}' not found in namespace '{namespace}'. Moving on !")
+        else:
+            logger.error(f"Error checking service '{service}' in namespace '{namespace}'")
+            logger.error("Error details: ")
+            logger.error(f" - Reason: {e.reason}")
+            logger.error(f" - Status: {e.status}")
+            logger.error(f" - Message: {e.body}")
         return False
-    else:
-        logger.info(f"Namespace '{namespace}' exists.")
+
+
+def check_namespace(namespace):
+
+    # Check if a namespace exists in the cluster.
+    try:
+        requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+        namespace = core_api.read_namespace(namespace)
+        logger.info(f"Namespace '{namespace.metadata.name}' exists.")
         return True
+    except kubernetes.client.rest.ApiException as e:
+        if e.status == 404:
+            logger.warning(f"Namespace '{namespace}' not found. Moving on !")
+        else:
+            logger.error(f"Error checking namespace '{namespace}'")
+            logger.error("Error details: ")
+            logger.error(f" - Reason: {e.reason}")
+            logger.error(f" - Status: {e.status}")
+            logger.error(f" - Message: {e.body}")
+        return False
 
 
 def check_login():
@@ -210,8 +174,6 @@ def check_login():
 
 
 def main():
-
-    check_login()
 
     # Read SMCP configuration from the OpenShift cluster.
     output = subprocess.run(
@@ -244,15 +206,12 @@ def main():
 
                 logger.newline()
                 # Check if namespace exists
-                if check_namespace_exists(namespace):
-                    # Check if deployment exists in the namespace
+                if check_namespace(namespace):
                     if check_service_exists(namespace, gateway_id):
-                        # Remove service labels
-                        remove_service_labels(namespace, gateway_id)
-                        if not dry_run:
-                            # Validate label removal
-                            validate_label_removal(namespace, gateway_id)
+                        if service_labels_exists(namespace, gateway_id):
+                            remove_service_label(namespace, gateway_id) 
 
+                        logger.newline()
                         logger.info(
                             "====================================================================================="
                         )
@@ -267,35 +226,44 @@ if __name__ == "__main__":
     # Set global logger
     logger = create_logger()
 
-    parser = argparse.ArgumentParser("remove_service_labels")
-    parser.add_argument(
-        "--dry-run",
-        action="store_true",
-        help="Run the script in dry run mode without making any changes.",
+    check_login()
+
+    # Configure the Kubernetes client to connect to the OpenShift cluster.
+    output = subprocess.run(
+        ["oc", "whoami", "-t"],
+        capture_output=True,
+        text=True,
     )
-    parser.add_argument(
-        "--execute",
-        action="store_true",
-        help="Run the script in execution mode and make changes.",
+    if output.returncode != 0:
+        logger.error("Unable to set KUBERNETES_TOKEN environment variable. Exiting...")
+        sys.exit(1)  # Exit if the token is not set
+    else:
+        os.environ["KUBERNETES_TOKEN"] = output.stdout.strip()
+
+    # Configure the Kubernetes client
+    configuration = client.Configuration()
+    configuration.api_key_prefix = {"authorization": "Bearer"}
+    configuration.api_key = {
+        "authorization": os.environ.get("KUBERNETES_TOKEN", "")
+    }  # Ensure the token is set in the environment variable
+    if not configuration.api_key["authorization"]:
+        logger.error("KUBERNETES_TOKEN environment variable is not set. Exiting...")
+        sys.exit(1)  # Exit if the token is not set
+    configuration.host = os.environ.get(
+        "KUBERNETES_HOST", ""
+    )  # Ensure the host is set in the environment variable
+    if not configuration.host:
+        logger.error("KUBERNETES_HOST environment variable is not set. Exiting...")
+        sys.exit(1)  # Exit if the host is not set
+    configuration.verify_ssl = (
+        False  # Disable SSL verification for local testing; set to True in production
     )
 
-    if len(sys.argv) != 2:
-        logger.info("USAGE: python remove_service_labels.py --dry-run (OR) --execute")
-        logger.error("Please provide the relevant input to run.")
-        sys.exit(1)  # Exit with error status
+    api_client = client.ApiClient(configuration)
 
-    args = parser.parse_args()
-    dry_run = args.dry_run
-    if dry_run:
-        logger.info(
-            "********************************************************************"
-        )
-        logger.info(
-            "****       Running in DRY RUN MODE. No changes will be made.    ****"
-        )
-        logger.info(
-            "********************************************************************"
-        )
-        logger.newline()
+    global core_api, apps_api  # Declare core_api and apps_api as global variables to use them in other functions
+    core_api = client.CoreV1Api(api_client)
+    apps_api = client.AppsV1Api(api_client)
 
+    # Run the main function
     main()

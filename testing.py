@@ -1,28 +1,30 @@
 #!/usr/bin/env python3
 """
-Filename      : check_service_endpoints.py
+Filename      : check_role_bindings
 Author        : Aiyaz Khan
 Maintained by : Kyndryl Engineering
 Version       : 1.0
-Description   : This scripts checks the service endpoints for injected gateways pods in an OpenShift cluster.
+Description   : This scripts checks the role bindings
 """
 
-from datetime import datetime, timedelta
-import os
-import time
+import subprocess
 
 
+def get_role_bindings(namespace, rolebinding_name="ig002-sds"):
+
+    # Read rolebinding 
+    output = subprocess.run(
+        [
+            "oc","get","rolebinding",rolebinding_name,"-n",namespace,"-o","jsonpath={.roleRef[*].name}"
+        ],
+        capture_output=True,
+    )
+    smmr = output.stdout
+    print(smmr)
+    
 def main():
 
-    silence = 12
-
-    os.environ['TZ'] = 'Europe/London'
-    time.tzset()
-
-    start_time = (datetime.now() - timedelta(minutes=1)).isoformat() + "Z"
-    end_time = (datetime.now() + timedelta(hours=silence)).isoformat() + "Z"
-    
-    print(f"Silencing alerts from {start_time} to {end_time}")
+    get_role_bindings(namespace="lbg-ocp-bookinfo-200-test")
     
 
 

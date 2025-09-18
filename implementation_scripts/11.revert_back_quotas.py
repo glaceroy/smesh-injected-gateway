@@ -6,15 +6,18 @@ Version       : 1.0
 Description   : This script will revert the resource quota memory and CPU to their original values from the backup taken earlier for the smesh namespaces.
 """
 
-import argparse
 import logging
 import os
 import subprocess
 import sys
 import types
 from datetime import datetime
+from urllib3.exceptions import InsecureRequestWarning
+import requests
 
+import kubernetes.client.rest
 import yaml
+from kubernetes import client
 
 
 def log_newline(self, how_many_lines=1):
@@ -65,76 +68,61 @@ def create_logger():
 
 def display_current_values(namespace):
 
-    output = subprocess.run(
-        [
-            "oc",
-            "get",
-            "quota",
-            f"{namespace}-quota",
-            "-n",
-            namespace,
-            "-o",
-            "yaml",
-        ],
-        capture_output=True,
-        text=True,
-    )
-    if output.returncode != 0:
+    try:
+        requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+        quota = core_api.read_namespaced_resource_quota(f"{namespace}-quota", namespace)
+        hard_limits = quota.spec.hard
+        requests_cpu = hard_limits.get("requests.cpu")
+        requests_memory = hard_limits.get("requests.memory")
+        limits_cpu = hard_limits.get("limits.cpu")
+        limits_memory = hard_limits.get("limits.memory")
+        logger.info(f"Current resource quota values in namespace '{namespace}':")
+        logger.info(f" - CPU Requests       : {requests_cpu} CPU")
+        logger.info(f" - CPU Limits         : {limits_cpu} CPU")
+        logger.info(f" - Memory Requests    : {requests_memory}")
+        logger.info(f" - Memory Limits      : {limits_memory}")
+    except kubernetes.client.rest.ApiException as e:
         logger.error(
-            f"Failed to retrieve current resource quota for namespace '{namespace}': {output.stderr}"
+            f"Error retrieving resource quota '{namespace}-quota' in namespace '{namespace}'"
         )
-        return False
-
-    logger.info(f"Current resource quota :")
-    quota = yaml.safe_load(output.stdout)
-
-    requests_cpu = quota["status"]["hard"].get("requests.cpu")
-    requests_memory = quota["status"]["hard"].get("requests.memory")
-    limits_cpu = quota["status"]["hard"].get("limits.cpu")
-    limits_memory = quota["status"]["hard"].get("limits.memory")
-
-    logger.info(f" - CPU Requests       : {requests_cpu} CPU")
-    logger.info(f" - CPU Limits         : {limits_cpu} CPU")
-    logger.info(f" - Memory Requests    : {requests_memory}")
-    logger.info(f" - Memory Limits      : {limits_memory}")
-    logger.newline()
+        logger.error("Error details: ")
+        logger.error(f" - Reason: {e.reason}")
+        logger.error(f" - Status: {e.status}")
+        logger.error(f" - Message: {e.body}")
 
 
 def patch_namespace_quota(namespace, quota_resource, value):
 
     quota_name = f"{namespace}-quota"
 
-    if dry_run:
-        # Simulate the patching action without executing it
-        output = subprocess.CompletedProcess(
-            args=[],
-            returncode=0,
-            stdout=f'oc patch quota {quota_name} -n {namespace} --type=merge -p \'{{"spec": {{"hard": {{"{quota_resource}": "{value}"}}}}}}\'',
-            stderr="",
+    # Prepare the patch body
+    patch_body = {
+        "spec": {
+            "hard": {
+                quota_resource: value
+            }
+        }
+    }
+    try:
+        requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+        core_api.patch_namespaced_resource_quota(
+            name=quota_name,
+            namespace=namespace,
+            body=patch_body,
         )
-        # Log the dry run output
-        logger.info(f"DRY RUN Command: {output.stdout}")
-    else:
-        # Log the action of patching the resource quota
         logger.info(
-            f"Patching resource quota for namespace '{namespace}' with '{quota_resource}' = '{value}'"
+            f"Successfully patched resource quota '{quota_name}' in namespace '{namespace}'"
         )
-        # Patch the resource quota for the namespace
-        output = subprocess.run(
-            [
-                "oc",
-                "patch",
-                "quota",
-                quota_name,
-                "-n",
-                namespace,
-                "--type=merge",
-                "-p",
-                f'{{"spec": {{"hard": {{"{quota_resource}": "{value}"}}}}}}',
-            ],
-            capture_output=True,
-            text=True,
+        return True
+    except kubernetes.client.rest.ApiException as e:
+        logger.error(
+            f"Error patching resource quota '{quota_name}' in namespace '{namespace}'"
         )
+        logger.error("Error details: ")
+        logger.error(f" - Reason: {e.reason}")
+        logger.error(f" - Status: {e.status}")
+        logger.error(f" - Message: {e.body}")
+        return False
 
 
 def revert_back_original(namespace):
@@ -145,85 +133,82 @@ def revert_back_original(namespace):
     fullpath = os.path.join(filepath, filename)
 
     if not os.path.exists(fullpath):
-        logger.error(f"Backup file '{fullpath}' does not exist. OMG !!!")
+        logger.error(
+            f"Backup file '{fullpath}' does not exist. Cannot revert resource quotas for namespace '{namespace}'."
+        )
         logger.newline()
-        return False
-
-    with open(fullpath, "r") as f:
-        backup_data = yaml.safe_load(f)
-
-    if not backup_data:
-        logger.error(f"Failed to load backup data from '{fullpath}'.")
-        return False
-
-    requests_cpu = backup_data.get("spec", {}).get("hard", {}).get("requests.cpu", "")
-    limits_cpu = backup_data.get("spec", {}).get("hard", {}).get("limits.cpu", "")
-    requests_memory = (
-        backup_data.get("spec", {}).get("hard", {}).get("requests.memory", "")
-    )
-    limits_memory = backup_data.get("spec", {}).get("hard", {}).get("limits.memory", "")
-
-    logger.newline()
-    logger.info(
-        f"Reverting back to original quota values from backup file '{fullpath}':"
-    )
+        return
+    # Read the backup file
+    with open(fullpath, "r") as file:
+        try:
+            backup_data = yaml.safe_load(file)
+        except yaml.YAMLError as e:
+            logger.error(f"Error reading YAML file '{fullpath}': {e}")
+            return
+    if not backup_data or "spec" not in backup_data or "hard" not in backup_data["spec"]:
+        logger.error(
+            f"Invalid backup data in file '{fullpath}'. Cannot revert resource quotas for namespace '{namespace}'."
+        )
+        return  
+    hard_limits = backup_data["spec"]["hard"]
+    requests_cpu = hard_limits.get("requests.cpu")
+    requests_memory = hard_limits.get("requests.memory")
+    limits_cpu = hard_limits.get("limits.cpu")
+    limits_memory = hard_limits.get("limits.memory")
+    if not all([requests_cpu, requests_memory, limits_cpu, limits_memory]):
+        logger.error(
+            f"Missing resource quota values in backup file '{fullpath}'. Cannot revert resource quotas for namespace '{namespace}'."
+        )
+        return
+    logger.info(f"Reverting resource quotas for namespace '{namespace}' to original values from backup.")
+    logger.info("Original resource quota values from backup file:")
     logger.info(f" - CPU Requests       : {requests_cpu} CPU")
     logger.info(f" - CPU Limits         : {limits_cpu} CPU")
     logger.info(f" - Memory Requests    : {requests_memory}")
     logger.info(f" - Memory Limits      : {limits_memory}")
-    logger.newline()
-
-    # Apply the changes
-    patch_namespace_quota(namespace, "requests.cpu", requests_cpu)
-    patch_namespace_quota(namespace, "limits.cpu", limits_cpu)
-    patch_namespace_quota(namespace, "requests.memory", requests_memory)
-    patch_namespace_quota(namespace, "limits.memory", limits_memory)
-
-    if not dry_run:
-        logger.info(f"Quota reverted successfully for namespace '{namespace}'.")
-
+    
     logger.newline()
     display_current_values(namespace)
 
 
 def check_quota(namespace):
 
-    # Check if a quota exists for the given namespace.
-    output = subprocess.run(
-        [
-            "oc",
-            "get",
-            "quota",
-            f"{namespace}-quota",
-            "-n",
-            namespace,
-            "-o",
-            "yaml",
-        ],
-        capture_output=True,
-        text=True,
-    )
-    if output.returncode != 0:
-        logger.error(f"Quota '{namespace}-quota' does not exist.")
-        logger.newline()
+    # Check if a resource quota exists in the given namespace.
+    try:
+        requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+        quota = core_api.read_namespaced_resource_quota(f"{namespace}-quota", namespace)
+        logger.info(f"Resource quota '{quota.metadata.name}' exists in namespace '{namespace}'.")
+        return True
+    except kubernetes.client.rest.ApiException as e:
+        if e.status == 404:
+            logger.warning(f"Resource quota '{namespace}-quota' not found in namespace '{namespace}'. Moving on !")
+        else:
+            logger.error(f"Error checking resource quota in namespace '{namespace}'")
+            logger.error("Error details: ")
+            logger.error(f" - Reason: {e.reason}")
+            logger.error(f" - Status: {e.status}")
+            logger.error(f" - Message: {e.body}")
         return False
-    logger.info(f"Quota '{namespace}-quota' exists.")
-    return True
 
 
 def check_namespace(namespace):
 
-    # Check if a namespace exists.
-    output = subprocess.run(
-        ["oc", "get", "namespace", namespace],
-        capture_output=True,
-        text=True,
-    )
-    if output.returncode != 0:
-        logger.error(f"Namespace '{namespace}' does not exist.")
+    # Check if a namespace exists in the cluster.
+    try:
+        requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+        namespace = core_api.read_namespace(namespace)
+        logger.info(f"Namespace '{namespace.metadata.name}' exists.")
+        return True
+    except kubernetes.client.rest.ApiException as e:
+        if e.status == 404:
+            logger.warning(f"Namespace '{namespace}' not found. Moving on !")
+        else:
+            logger.error(f"Error checking namespace '{namespace}'")
+            logger.error("Error details: ")
+            logger.error(f" - Reason: {e.reason}")
+            logger.error(f" - Status: {e.status}")
+            logger.error(f" - Message: {e.body}")
         return False
-    logger.info(f"Namespace '{namespace}' exists.")
-    return True
 
 
 def check_login():
@@ -286,39 +271,47 @@ def main():
 
 
 if __name__ == "__main__":
-
     # Set global logger
     logger = create_logger()
 
-    parser = argparse.ArgumentParser("revert_back_quotas")
-    parser.add_argument(
-        "--dry-run",
-        action="store_true",
-        help="Run the script in dry run mode without making any changes.",
+    check_login()
+
+    # Configure the Kubernetes client to connect to the OpenShift cluster.
+    output = subprocess.run(
+        ["oc", "whoami", "-t"],
+        capture_output=True,
+        text=True,
     )
-    parser.add_argument(
-        "--execute",
-        action="store_true",
-        help="Run the script in execution mode and make changes.",
+    if output.returncode != 0:
+        logger.error("Unable to set KUBERNETES_TOKEN environment variable. Exiting...")
+        sys.exit(1)  # Exit if the token is not set
+    else:
+        os.environ["KUBERNETES_TOKEN"] = output.stdout.strip()
+
+    # Configure the Kubernetes client
+    configuration = client.Configuration()
+    configuration.api_key_prefix = {"authorization": "Bearer"}
+    configuration.api_key = {
+        "authorization": os.environ.get("KUBERNETES_TOKEN", "")
+    }  # Ensure the token is set in the environment variable
+    if not configuration.api_key["authorization"]:
+        logger.error("KUBERNETES_TOKEN environment variable is not set. Exiting...")
+        sys.exit(1)  # Exit if the token is not set
+    configuration.host = os.environ.get(
+        "KUBERNETES_HOST", ""
+    )  # Ensure the host is set in the environment variable
+    if not configuration.host:
+        logger.error("KUBERNETES_HOST environment variable is not set. Exiting...")
+        sys.exit(1)  # Exit if the host is not set
+    configuration.verify_ssl = (
+        False  # Disable SSL verification for local testing; set to True in production
     )
 
-    if len(sys.argv) != 2:
-        logger.info("USAGE: python revert_back_quotas.py --dry-run (OR) --execute")
-        logger.error("Please provide the relevant input to run.")
-        sys.exit(1)  # Exit with error status
+    api_client = client.ApiClient(configuration)
 
-    args = parser.parse_args()
-    dry_run = args.dry_run
+    global core_api, apps_api  # Declare core_api and apps_api as global variables to use them in other functions
+    core_api = client.CoreV1Api(api_client)
+    apps_api = client.AppsV1Api(api_client)
 
-    if dry_run:
-        logger.info(
-            "********************************************************************"
-        )
-        logger.info(
-            "****       Running in DRY RUN MODE. No changes will be made.    ****"
-        )
-        logger.info(
-            "********************************************************************"
-        )
-        logger.newline()
+    # Run the main function
     main()
