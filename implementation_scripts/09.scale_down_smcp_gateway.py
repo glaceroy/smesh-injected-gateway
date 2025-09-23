@@ -151,6 +151,7 @@ def check_namespace(namespace):
 def check_deployment(namespace, gateway_id):
 
     try:
+        requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
         apps_api.read_namespaced_deployment(name=gateway_id, namespace=namespace)
         logger.info(f"Deployment '{gateway_id}' exists in namespace '{namespace}'.")
         return True
