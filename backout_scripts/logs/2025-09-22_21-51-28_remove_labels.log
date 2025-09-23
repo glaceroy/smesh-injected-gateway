@@ -1,0 +1,143 @@
+[Mon, 22 Sep 2025 21:51:30]     INFO : ============================   Starting Script Execution.  ============================
+
+[Mon, 22 Sep 2025 21:51:30]     INFO : Namespace 'lbg-ocp-engineering-100-lab' exists.
+[Mon, 22 Sep 2025 21:51:30]     INFO : Service 'eg001' exists in namespace 'lbg-ocp-engineering-100-lab'.
+[Mon, 22 Sep 2025 21:51:30]     INFO : Labels added successfully to service 'eg001' in namespace 'lbg-ocp-engineering-100-lab'.
+[Mon, 22 Sep 2025 21:51:30]     INFO : Service Account 'eg001-service-account' exists in namespace 'lbg-ocp-engineering-100-lab'.
+[Mon, 22 Sep 2025 21:51:30]     INFO : Labels added successfully to Service Account 'eg001-service-account' in namespace 'lbg-ocp-engineering-100-lab'.
+[Mon, 22 Sep 2025 21:51:30]     INFO : Role 'eg001-sds' exists in namespace 'lbg-ocp-engineering-100-lab'.
+[Mon, 22 Sep 2025 21:51:30]     INFO : Labels added successfully to Role 'eg001-sds' in namespace 'lbg-ocp-engineering-100-lab'.
+[Mon, 22 Sep 2025 21:51:30]     INFO : Role Binding 'eg001-sds' exists in namespace 'lbg-ocp-engineering-100-lab'.
+[Mon, 22 Sep 2025 21:51:30]     INFO : Labels added successfully to Role Binding 'eg001-sds' in namespace 'lbg-ocp-engineering-100-lab'.
+
+[Mon, 22 Sep 2025 21:51:30]     INFO : =====================================================================================
+
+[Mon, 22 Sep 2025 21:51:30]     INFO : =====================================================================================
+
+[Mon, 22 Sep 2025 21:51:30]     INFO : Namespace 'lbg-ocp-bookinfo-200-test' exists.
+[Mon, 22 Sep 2025 21:51:30]     INFO : Service 'eg002' exists in namespace 'lbg-ocp-bookinfo-200-test'.
+[Mon, 22 Sep 2025 21:51:30]     INFO : Labels added successfully to service 'eg002' in namespace 'lbg-ocp-bookinfo-200-test'.
+[Mon, 22 Sep 2025 21:51:30]     INFO : Service Account 'eg002-service-account' exists in namespace 'lbg-ocp-bookinfo-200-test'.
+[Mon, 22 Sep 2025 21:51:30]     INFO : Labels added successfully to Service Account 'eg002-service-account' in namespace 'lbg-ocp-bookinfo-200-test'.
+[Mon, 22 Sep 2025 21:51:30]     INFO : Role 'eg002-sds' exists in namespace 'lbg-ocp-bookinfo-200-test'.
+[Mon, 22 Sep 2025 21:51:30]     INFO : Labels added successfully to Role 'eg002-sds' in namespace 'lbg-ocp-bookinfo-200-test'.
+[Mon, 22 Sep 2025 21:51:30]     INFO : Role Binding 'eg002-sds' exists in namespace 'lbg-ocp-bookinfo-200-test'.
+[Mon, 22 Sep 2025 21:51:30]     INFO : Labels added successfully to Role Binding 'eg002-sds' in namespace 'lbg-ocp-bookinfo-200-test'.
+
+[Mon, 22 Sep 2025 21:51:30]     INFO : =====================================================================================
+
+[Mon, 22 Sep 2025 21:51:30]     INFO : =====================================================================================
+
+[Mon, 22 Sep 2025 21:51:30]     INFO : Namespace 'lbg-ocp-bookinfo-300-prod' exists.
+[Mon, 22 Sep 2025 21:51:30]     INFO : Service 'eg003' exists in namespace 'lbg-ocp-bookinfo-300-prod'.
+[Mon, 22 Sep 2025 21:51:30]     INFO : Labels added successfully to service 'eg003' in namespace 'lbg-ocp-bookinfo-300-prod'.
+[Mon, 22 Sep 2025 21:51:30]     INFO : Service Account 'eg003-service-account' exists in namespace 'lbg-ocp-bookinfo-300-prod'.
+[Mon, 22 Sep 2025 21:51:30]     INFO : Labels added successfully to Service Account 'eg003-service-account' in namespace 'lbg-ocp-bookinfo-300-prod'.
+[Mon, 22 Sep 2025 21:51:30]     INFO : Role 'eg003-sds' exists in namespace 'lbg-ocp-bookinfo-300-prod'.
+[Mon, 22 Sep 2025 21:51:30]     INFO : Labels added successfully to Role 'eg003-sds' in namespace 'lbg-ocp-bookinfo-300-prod'.
+[Mon, 22 Sep 2025 21:51:30]     INFO : Role Binding 'eg003-sds' exists in namespace 'lbg-ocp-bookinfo-300-prod'.
+[Mon, 22 Sep 2025 21:51:30]     INFO : Labels added successfully to Role Binding 'eg003-sds' in namespace 'lbg-ocp-bookinfo-300-prod'.
+
+[Mon, 22 Sep 2025 21:51:30]     INFO : =====================================================================================
+
+[Mon, 22 Sep 2025 21:51:30]     INFO : =====================================================================================
+
+[Mon, 22 Sep 2025 21:51:31]     INFO : Namespace 'lbg-ocp-injected-gw-400-lab' exists.
+[Mon, 22 Sep 2025 21:51:31]     INFO : Service 'eg004' exists in namespace 'lbg-ocp-injected-gw-400-lab'.
+[Mon, 22 Sep 2025 21:51:31]     INFO : Labels added successfully to service 'eg004' in namespace 'lbg-ocp-injected-gw-400-lab'.
+[Mon, 22 Sep 2025 21:51:31]     INFO : Service Account 'eg004-service-account' exists in namespace 'lbg-ocp-injected-gw-400-lab'.
+[Mon, 22 Sep 2025 21:51:31]     INFO : Labels added successfully to Service Account 'eg004-service-account' in namespace 'lbg-ocp-injected-gw-400-lab'.
+[Mon, 22 Sep 2025 21:51:31]     INFO : Role 'eg004-sds' exists in namespace 'lbg-ocp-injected-gw-400-lab'.
+[Mon, 22 Sep 2025 21:51:31]     INFO : Labels added successfully to Role 'eg004-sds' in namespace 'lbg-ocp-injected-gw-400-lab'.
+[Mon, 22 Sep 2025 21:51:31]     INFO : Role Binding 'eg004-sds' exists in namespace 'lbg-ocp-injected-gw-400-lab'.
+[Mon, 22 Sep 2025 21:51:31]     INFO : Labels added successfully to Role Binding 'eg004-sds' in namespace 'lbg-ocp-injected-gw-400-lab'.
+
+[Mon, 22 Sep 2025 21:51:31]     INFO : =====================================================================================
+
+[Mon, 22 Sep 2025 21:51:31]     INFO : =====================================================================================
+
+[Mon, 22 Sep 2025 21:51:31]     INFO : Namespace 'lbg-ocp-servicemesh-3-400-lab' exists.
+[Mon, 22 Sep 2025 21:51:31]     INFO : Service 'eg005' exists in namespace 'lbg-ocp-servicemesh-3-400-lab'.
+[Mon, 22 Sep 2025 21:51:31]     INFO : Labels added successfully to service 'eg005' in namespace 'lbg-ocp-servicemesh-3-400-lab'.
+[Mon, 22 Sep 2025 21:51:31]     INFO : Service Account 'eg005-service-account' exists in namespace 'lbg-ocp-servicemesh-3-400-lab'.
+[Mon, 22 Sep 2025 21:51:31]     INFO : Labels added successfully to Service Account 'eg005-service-account' in namespace 'lbg-ocp-servicemesh-3-400-lab'.
+[Mon, 22 Sep 2025 21:51:31]     INFO : Role 'eg005-sds' exists in namespace 'lbg-ocp-servicemesh-3-400-lab'.
+[Mon, 22 Sep 2025 21:51:31]     INFO : Labels added successfully to Role 'eg005-sds' in namespace 'lbg-ocp-servicemesh-3-400-lab'.
+[Mon, 22 Sep 2025 21:51:31]     INFO : Role Binding 'eg005-sds' exists in namespace 'lbg-ocp-servicemesh-3-400-lab'.
+[Mon, 22 Sep 2025 21:51:31]     INFO : Labels added successfully to Role Binding 'eg005-sds' in namespace 'lbg-ocp-servicemesh-3-400-lab'.
+
+[Mon, 22 Sep 2025 21:51:31]     INFO : =====================================================================================
+
+[Mon, 22 Sep 2025 21:51:31]     INFO : =====================================================================================
+
+[Mon, 22 Sep 2025 21:51:31]     INFO : Namespace 'lbg-ocp-engineering-100-lab' exists.
+[Mon, 22 Sep 2025 21:51:31]     INFO : Service 'ig001' exists in namespace 'lbg-ocp-engineering-100-lab'.
+[Mon, 22 Sep 2025 21:51:31]     INFO : Labels added successfully to service 'ig001' in namespace 'lbg-ocp-engineering-100-lab'.
+[Mon, 22 Sep 2025 21:51:31]     INFO : Service Account 'ig001-service-account' exists in namespace 'lbg-ocp-engineering-100-lab'.
+[Mon, 22 Sep 2025 21:51:31]     INFO : Labels added successfully to Service Account 'ig001-service-account' in namespace 'lbg-ocp-engineering-100-lab'.
+[Mon, 22 Sep 2025 21:51:31]     INFO : Role 'ig001-sds' exists in namespace 'lbg-ocp-engineering-100-lab'.
+[Mon, 22 Sep 2025 21:51:31]     INFO : Labels added successfully to Role 'ig001-sds' in namespace 'lbg-ocp-engineering-100-lab'.
+[Mon, 22 Sep 2025 21:51:31]     INFO : Role Binding 'ig001-sds' exists in namespace 'lbg-ocp-engineering-100-lab'.
+[Mon, 22 Sep 2025 21:51:31]     INFO : Labels added successfully to Role Binding 'ig001-sds' in namespace 'lbg-ocp-engineering-100-lab'.
+
+[Mon, 22 Sep 2025 21:51:31]     INFO : =====================================================================================
+
+[Mon, 22 Sep 2025 21:51:31]     INFO : =====================================================================================
+
+[Mon, 22 Sep 2025 21:51:31]     INFO : Namespace 'lbg-ocp-bookinfo-200-test' exists.
+[Mon, 22 Sep 2025 21:51:31]     INFO : Service 'ig002' exists in namespace 'lbg-ocp-bookinfo-200-test'.
+[Mon, 22 Sep 2025 21:51:31]     INFO : Labels added successfully to service 'ig002' in namespace 'lbg-ocp-bookinfo-200-test'.
+[Mon, 22 Sep 2025 21:51:31]     INFO : Service Account 'ig002-service-account' exists in namespace 'lbg-ocp-bookinfo-200-test'.
+[Mon, 22 Sep 2025 21:51:31]     INFO : Labels added successfully to Service Account 'ig002-service-account' in namespace 'lbg-ocp-bookinfo-200-test'.
+[Mon, 22 Sep 2025 21:51:31]     INFO : Role 'ig002-sds' exists in namespace 'lbg-ocp-bookinfo-200-test'.
+[Mon, 22 Sep 2025 21:51:31]     INFO : Labels added successfully to Role 'ig002-sds' in namespace 'lbg-ocp-bookinfo-200-test'.
+[Mon, 22 Sep 2025 21:51:31]     INFO : Role Binding 'ig002-sds' exists in namespace 'lbg-ocp-bookinfo-200-test'.
+[Mon, 22 Sep 2025 21:51:31]     INFO : Labels added successfully to Role Binding 'ig002-sds' in namespace 'lbg-ocp-bookinfo-200-test'.
+
+[Mon, 22 Sep 2025 21:51:31]     INFO : =====================================================================================
+
+[Mon, 22 Sep 2025 21:51:31]     INFO : =====================================================================================
+
+[Mon, 22 Sep 2025 21:51:31]     INFO : Namespace 'lbg-ocp-bookinfo-300-prod' exists.
+[Mon, 22 Sep 2025 21:51:31]     INFO : Service 'ig003' exists in namespace 'lbg-ocp-bookinfo-300-prod'.
+[Mon, 22 Sep 2025 21:51:31]     INFO : Labels added successfully to service 'ig003' in namespace 'lbg-ocp-bookinfo-300-prod'.
+[Mon, 22 Sep 2025 21:51:31]     INFO : Service Account 'ig003-service-account' exists in namespace 'lbg-ocp-bookinfo-300-prod'.
+[Mon, 22 Sep 2025 21:51:31]     INFO : Labels added successfully to Service Account 'ig003-service-account' in namespace 'lbg-ocp-bookinfo-300-prod'.
+[Mon, 22 Sep 2025 21:51:31]     INFO : Role 'ig003-sds' exists in namespace 'lbg-ocp-bookinfo-300-prod'.
+[Mon, 22 Sep 2025 21:51:32]     INFO : Labels added successfully to Role 'ig003-sds' in namespace 'lbg-ocp-bookinfo-300-prod'.
+[Mon, 22 Sep 2025 21:51:32]     INFO : Role Binding 'ig003-sds' exists in namespace 'lbg-ocp-bookinfo-300-prod'.
+[Mon, 22 Sep 2025 21:51:32]     INFO : Labels added successfully to Role Binding 'ig003-sds' in namespace 'lbg-ocp-bookinfo-300-prod'.
+
+[Mon, 22 Sep 2025 21:51:32]     INFO : =====================================================================================
+
+[Mon, 22 Sep 2025 21:51:32]     INFO : =====================================================================================
+
+[Mon, 22 Sep 2025 21:51:32]     INFO : Namespace 'lbg-ocp-injected-gw-400-lab' exists.
+[Mon, 22 Sep 2025 21:51:32]     INFO : Service 'ig004' exists in namespace 'lbg-ocp-injected-gw-400-lab'.
+[Mon, 22 Sep 2025 21:51:32]     INFO : Labels added successfully to service 'ig004' in namespace 'lbg-ocp-injected-gw-400-lab'.
+[Mon, 22 Sep 2025 21:51:32]     INFO : Service Account 'ig004-service-account' exists in namespace 'lbg-ocp-injected-gw-400-lab'.
+[Mon, 22 Sep 2025 21:51:32]     INFO : Labels added successfully to Service Account 'ig004-service-account' in namespace 'lbg-ocp-injected-gw-400-lab'.
+[Mon, 22 Sep 2025 21:51:32]     INFO : Role 'ig004-sds' exists in namespace 'lbg-ocp-injected-gw-400-lab'.
+[Mon, 22 Sep 2025 21:51:32]     INFO : Labels added successfully to Role 'ig004-sds' in namespace 'lbg-ocp-injected-gw-400-lab'.
+[Mon, 22 Sep 2025 21:51:32]     INFO : Role Binding 'ig004-sds' exists in namespace 'lbg-ocp-injected-gw-400-lab'.
+[Mon, 22 Sep 2025 21:51:32]     INFO : Labels added successfully to Role Binding 'ig004-sds' in namespace 'lbg-ocp-injected-gw-400-lab'.
+
+[Mon, 22 Sep 2025 21:51:32]     INFO : =====================================================================================
+
+[Mon, 22 Sep 2025 21:51:32]     INFO : =====================================================================================
+
+[Mon, 22 Sep 2025 21:51:32]     INFO : Namespace 'lbg-ocp-servicemesh-3-400-lab' exists.
+[Mon, 22 Sep 2025 21:51:32]     INFO : Service 'ig005' exists in namespace 'lbg-ocp-servicemesh-3-400-lab'.
+[Mon, 22 Sep 2025 21:51:32]     INFO : Labels added successfully to service 'ig005' in namespace 'lbg-ocp-servicemesh-3-400-lab'.
+[Mon, 22 Sep 2025 21:51:32]     INFO : Service Account 'ig005-service-account' exists in namespace 'lbg-ocp-servicemesh-3-400-lab'.
+[Mon, 22 Sep 2025 21:51:32]     INFO : Labels added successfully to Service Account 'ig005-service-account' in namespace 'lbg-ocp-servicemesh-3-400-lab'.
+[Mon, 22 Sep 2025 21:51:32]     INFO : Role 'ig005-sds' exists in namespace 'lbg-ocp-servicemesh-3-400-lab'.
+[Mon, 22 Sep 2025 21:51:32]     INFO : Labels added successfully to Role 'ig005-sds' in namespace 'lbg-ocp-servicemesh-3-400-lab'.
+[Mon, 22 Sep 2025 21:51:32]     INFO : Role Binding 'ig005-sds' exists in namespace 'lbg-ocp-servicemesh-3-400-lab'.
+[Mon, 22 Sep 2025 21:51:32]     INFO : Labels added successfully to Role Binding 'ig005-sds' in namespace 'lbg-ocp-servicemesh-3-400-lab'.
+
+[Mon, 22 Sep 2025 21:51:32]     INFO : =====================================================================================
+
+[Mon, 22 Sep 2025 21:51:32]     INFO : =====================================================================================
+
+[Mon, 22 Sep 2025 21:51:32]     INFO : ============================   Script Execution Completed.   ============================

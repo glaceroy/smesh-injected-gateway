@@ -6,8 +6,6 @@ kind: Deployment
 metadata:
   name: ig{{ $project.ingress.id | toString }}-gateway
   namespace: {{ $project.namespace }}
-  annotations:
-    argocd.argoproj.io/sync-wave: "5"
 spec:
   replicas: {{ $project.ingress.replicas | default 1 }}
   selector:

@@ -1,0 +1,34 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: '{"apiVersion":"rbac.authorization.k8s.io/v1","kind":"RoleBinding","metadata":{"annotations":{"maistra.io/mesh-generation":"2.6.9-1-172"},"labels":{"app.kubernetes.io/component":"istio-egress","app.kubernetes.io/instance":"istio-system","app.kubernetes.io/managed-by":"maistra-istio-operator","app.kubernetes.io/name":"istio-egress","app.kubernetes.io/part-of":"istio","app.kubernetes.io/version":"2.6.9-1-172","istio.io/rev":"app-mesh-01","maistra-version":"2.6.9","maistra.io/owner":"istio-system","maistra.io/owner-name":"app-mesh-01","release":"istio"},"name":"eg002-sds","namespace":"lbg-ocp-bookinfo-200-test"},"roleRef":{"apiGroup":"rbac.authorization.k8s.io","kind":"Role","name":"eg002-sds"},"subjects":[{"kind":"ServiceAccount","name":"eg002-service-account"}]}
+
+      '
+    maistra.io/mesh-generation: 2.6.9-1-172
+    meta.helm.sh/release-name: service-mesh-injected-gateway
+    meta.helm.sh/release-namespace: istio-system
+  creationTimestamp: '2025-09-17T08:27:28Z'
+  labels:
+    app.kubernetes.io/component: istio-egress
+    app.kubernetes.io/instance: istio-system
+    app.kubernetes.io/managed-by: maistra-istio-operator
+    app.kubernetes.io/name: istio-egress
+    app.kubernetes.io/part-of: istio
+    app.kubernetes.io/version: 2.6.9-1-234
+    istio.io/rev: app-mesh-01
+    maistra-version: 2.6.9
+    maistra.io/owner: istio-system
+    maistra.io/owner-name: app-mesh-01
+    release: istio
+  name: eg002-sds
+  namespace: lbg-ocp-bookinfo-200-test
+  resourceVersion: '291679158'
+  uid: 6012ca5a-5e2a-4450-a9c3-34b51385c2f4
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: eg002-sds
+subjects:
+- kind: ServiceAccount
+  name: eg002-service-account

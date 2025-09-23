@@ -25,40 +25,23 @@ logger.addHandler(sh)
 
 def copy_scripts(cluster_prefix):
 
-    script_list = [
-        "01.silence.py",
-        "02.backup_quota_and_service.py",
-        "03.increase_quotas.py",
-        "04.extract_namespaces.py",
-        "05.enable_injected_gateway.py",
-        "06.check_service_endpoints.py",
-        "07.remove_service_labels.py",
-        "08.scale_down_smcp_gateway.py",
-        "09.disable_smcp_gateway.py",
-        "10.update_cluster_values.py",
-        "11.revert_back_quotas.py",
-        "12.reapply_smcp_labels.py",
-    ]
 
     log.info("")
-    for script in script_list:
-        script_source = "./implementation_scripts"
-        if not os.path.isdir(script_source):
-            log.error(f"Script source directory {script_source} does not exist.")
-            sys.exit(1)  # Exit with error status
-        script_fullpath = os.path.join(script_source, script)
-        if not os.path.isfile(script_fullpath):
-            log.error(f"Script {script} does not exist in {script_source}.")
-            sys.exit(1)
-        log.info(f"[ Copying Script ].......... {script}")
-        shutil.copy(script_fullpath, cluster_prefix)
-
-    return True
+    script_source = ["implementation_scripts", "pre_check_scripts", "backout_scripts"]
+    for script in script_source:
+        dest = os.path.join(f"./{cluster_prefix}", script)
+        try:
+            shutil.copytree(script, dest)
+        except Exception as e:
+            log.error(f"Failed to copy {script} to {dest}: {e}")
+            return False
+        else:
+            log.info(f"Copied {script} to {dest}")
 
 
 def create_directory(cluster_prefix):
 
-    folder_list = [cluster_prefix, "logs", "backups/quota", "backups/service"]
+    folder_list = [cluster_prefix, "logs", "backups/quota", "backups/service", "backups/namespace", "backups/service_account", "backups/role", "backups/role_binding"]
     for folder in folder_list:
         if folder is cluster_prefix:
             dirpath = os.path.join("./", folder)

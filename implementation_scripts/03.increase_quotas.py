@@ -6,15 +6,20 @@ Version       : 1.0
 Description   : This script will increase the resource quota memory and CPU by 1Gi and 1 Core respectively for the smesh namespace of the injected gateway.
 """
 
-import argparse
 import logging
-import operator
+import os
 import subprocess
 import sys
 import types
 from datetime import datetime
+from urllib3.exceptions import InsecureRequestWarning
+import requests
+import argparse
+import operator
 
+import kubernetes.client.rest
 import yaml
+from kubernetes import client
 
 
 def log_newline(self, how_many_lines=1):
@@ -85,7 +90,7 @@ def display_current_values(namespace):
         )
         return False
 
-    logger.info(f"Resource quota AFTER UPDATE :")
+    logger.info("Resource quota AFTER UPDATE :")
     quota = yaml.safe_load(output.stdout)
 
     requests_cpu = quota["status"]["hard"].get("requests.cpu")
@@ -100,7 +105,7 @@ def display_current_values(namespace):
     logger.newline()
 
 
-def patch_namespace_quota(namespace, quota_resource, value):
+def patch_namespace_quota(namespace, resources):
 
     quota_name = f"{namespace}-quota"
 
@@ -109,7 +114,7 @@ def patch_namespace_quota(namespace, quota_resource, value):
         output = subprocess.CompletedProcess(
             args=[],
             returncode=0,
-            stdout=f'oc patch quota {quota_name} -n {namespace} --type=merge -p \'{{"spec": {{"hard": {{"{quota_resource}": "{value}"}}}}}}\'',
+            stdout=f'oc patch quota {quota_name} -n {namespace} --type=merge -p \'{{"spec": {{"hard": {resources}}}}}\'',
             stderr="",
         )
         # Log the dry run output
@@ -117,24 +122,30 @@ def patch_namespace_quota(namespace, quota_resource, value):
     else:
         # Log the action of patching the resource quota
         logger.info(
-            f"Patching resource quota for namespace '{namespace}' with '{quota_resource}' = '{value}'"
+            f"Patching resource quota for namespace '{namespace}' with '{resources}'"
         )
         # Patch the resource quota for the namespace
-        output = subprocess.run(
-            [
-                "oc",
-                "patch",
-                "quota",
-                quota_name,
-                "-n",
-                namespace,
-                "--type=merge",
-                "-p",
-                f'{{"spec": {{"hard": {{"{quota_resource}": "{value}"}}}}}}',
-            ],
-            capture_output=True,
-            text=True,
-        )
+        try:
+            requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+            core_api.patch_namespaced_resource_quota(
+                name=quota_name,
+                namespace=namespace,
+                body={
+                    "spec": {
+                        "hard": {
+                            **resources
+                        }
+                    }
+                },
+            )
+        except kubernetes.client.rest.ApiException as e:
+            logger.error(
+                f"Error patching resource quota '{quota_name}' in namespace '{namespace}'"
+            )
+            logger.error("Error details: ")
+            logger.error(f" - Reason: {e.reason}")
+            logger.error(f" - Status: {e.status}")
+            logger.error(f" - Message: {e.body}")
 
 
 def calculate_namespace_resources(namespace):
@@ -200,6 +211,7 @@ def calculate_namespace_resources(namespace):
             requests_memory = op_func(requests_memory, update_memory_unit)
             limits_memory = op_func(limits_memory, update_memory_unit)
 
+
             logger.newline()
 
             resources = {
@@ -209,8 +221,7 @@ def calculate_namespace_resources(namespace):
                 "limits.memory": str(limits_memory) + limits_memory_unit,
             }
 
-            for resource, value in resources.items():
-                patch_namespace_quota(namespace, resource, value)
+            patch_namespace_quota(namespace, resources)
 
             logger.newline()
             if not dry_run:
@@ -233,42 +244,42 @@ def calculate_namespace_resources(namespace):
 
 def check_quota(namespace):
 
-    # Check if a quota exists for the given namespace.
-    output = subprocess.run(
-        [
-            "oc",
-            "get",
-            "quota",
-            f"{namespace}-quota",
-            "-n",
-            namespace,
-            "-o",
-            "yaml",
-        ],
-        capture_output=True,
-        text=True,
-    )
-    if output.returncode != 0:
-        logger.error(f"Quota '{namespace}-quota' does not exist.")
-        logger.newline()
+    # Check if a resource quota exists in the namespace.
+    try:
+        requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+        quota = core_api.read_namespaced_resource_quota(f"{namespace}-quota", namespace)
+        logger.info(f"Resource Quota '{quota.metadata.name}' exists in namespace '{namespace}'.")
+        return True
+    except kubernetes.client.rest.ApiException as e:
+        if e.status == 404:
+            logger.warning(f"Resource Quota '{namespace}-quota' not found in namespace '{namespace}'. Moving on !")
+        else:
+            logger.error(f"Error checking resource quota in namespace '{namespace}'")
+            logger.error("Error details: ")
+            logger.error(f" - Reason: {e.reason}")
+            logger.error(f" - Status: {e.status}")
+            logger.error(f" - Message: {e.body}")
         return False
-    logger.info(f"Quota '{namespace}-quota' exists.")
-    return True
 
 
 def check_namespace(namespace):
 
-    # Check if a namespace exists.
-    output = subprocess.run(
-        ["oc", "get", "namespace", namespace],
-        capture_output=True,
-        text=True,
-    )
-    if output.returncode != 0:
-        logger.error(f"Namespace '{namespace}' does not exist.")
+    # Check if a namespace exists in the cluster.
+    try:
+        requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+        namespace = core_api.read_namespace(namespace)
+        logger.info(f"Namespace '{namespace.metadata.name}' exists.")
+        return True
+    except kubernetes.client.rest.ApiException as e:
+        if e.status == 404:
+            logger.warning(f"Namespace '{namespace}' not found. Moving on !")
+        else:
+            logger.error(f"Error checking namespace '{namespace}'")
+            logger.error("Error details: ")
+            logger.error(f" - Reason: {e.reason}")
+            logger.error(f" - Status: {e.status}")
+            logger.error(f" - Message: {e.body}")
         return False
-    logger.info(f"Namespace '{namespace}' exists.")
-    return True
 
 
 def check_login():
@@ -365,5 +376,43 @@ if __name__ == "__main__":
             "********************************************************************"
         )
         logger.newline()
+    
+    # Configure the Kubernetes client to connect to the OpenShift cluster.
+    output = subprocess.run(
+        ["oc", "whoami", "-t"],
+        capture_output=True,
+        text=True,
+    )
+    if output.returncode != 0:
+        logger.error("Unable to set KUBERNETES_TOKEN environment variable. Exiting...")
+        sys.exit(1)  # Exit if the token is not set
+    else:
+        os.environ["KUBERNETES_TOKEN"] = output.stdout.strip()
 
+    # Configure the Kubernetes client
+    configuration = client.Configuration()
+    configuration.api_key_prefix = {"authorization": "Bearer"}
+    configuration.api_key = {
+        "authorization": os.environ.get("KUBERNETES_TOKEN", "")
+    }  # Ensure the token is set in the environment variable
+    if not configuration.api_key["authorization"]:
+        logger.error("KUBERNETES_TOKEN environment variable is not set. Exiting...")
+        sys.exit(1)  # Exit if the token is not set
+    configuration.host = os.environ.get(
+        "KUBERNETES_HOST", ""
+    )  # Ensure the host is set in the environment variable
+    if not configuration.host:
+        logger.error("KUBERNETES_HOST environment variable is not set. Exiting...")
+        sys.exit(1)  # Exit if the host is not set
+    configuration.verify_ssl = (
+        False  # Disable SSL verification for local testing; set to True in production
+    )
+
+    api_client = client.ApiClient(configuration)
+
+    global core_api, apps_api  # Declare core_api and apps_api as global variables to use them in other functions
+    core_api = client.CoreV1Api(api_client)
+    apps_api = client.AppsV1Api(api_client)
+
+    # Run the main function
     main()

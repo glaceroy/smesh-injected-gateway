@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-options: PruneLast=true
+    argocd.argoproj.io/sync-wave: '-5'
+    contact: aiyaz.khan
+    kubectl.kubernetes.io/last-applied-configuration: '{"apiVersion":"v1","kind":"Namespace","metadata":{"annotations":{"argocd.argoproj.io/sync-options":"PruneLast=true","argocd.argoproj.io/sync-wave":"-5","contact":"aiyaz.khan","openshift.io/description":"Engineering
+      namespace","openshift.io/display-name":"Engineering namespace","openshift.io/display-namespace":"Engineering
+      namespace","openshift.io/node-selector":"node-role.kubernetes.io/app="},"labels":{"AD_group":"GG_OCP_CLOUD_LAB_GROUP","CMDB_AppID":"AL12345","app.kubernetes.io/instance":"namespace-definitions","argocd.argoproj.io/managed-by":"openshift-gitops","cluster":"ocp.cloud.lab","namespace":"lbg-ocp-engineering-100-lab","snow":"IT.OCP.CLOUD.LAB"},"name":"lbg-ocp-engineering-100-lab"}}
+
+      '
+    openshift.io/description: Engineering namespace
+    openshift.io/display-name: Engineering namespace
+    openshift.io/display-namespace: Engineering namespace
+    openshift.io/node-selector: node-role.kubernetes.io/app=
+    openshift.io/sa.scc.mcs: s0:c29,c24
+    openshift.io/sa.scc.supplemental-groups: 1000860000/10000
+    openshift.io/sa.scc.uid-range: 1000860000/10000
+  creationTimestamp: '2025-05-19T15:11:51Z'
+  labels:
+    AD_group: GG_OCP_CLOUD_LAB_GROUP
+    CMDB_AppID: AL12345
+    app.kubernetes.io/instance: namespace-definitions
+    argocd.argoproj.io/managed-by: openshift-gitops
+    cluster: ocp.cloud.lab
+    ingress-shard: app-ingress-01
+    kiali.io/member-of: istio-system
+    kubernetes.io/metadata.name: lbg-ocp-engineering-100-lab
+    maistra.io/member-of: istio-system
+    namespace: lbg-ocp-engineering-100-lab
+    openshift-pipelines.tekton.dev/namespace-reconcile-version: 1.15.1
+    pod-security.kubernetes.io/audit: baseline
+    pod-security.kubernetes.io/audit-version: v1.24
+    pod-security.kubernetes.io/warn: baseline
+    pod-security.kubernetes.io/warn-version: v1.24
+    snow: IT.OCP.CLOUD.LAB
+  name: lbg-ocp-engineering-100-lab
+  resourceVersion: '266910102'
+  uid: f9a21fe5-9c6c-4e05-8639-8650a91785da
+spec:
+  finalizers:
+  - kubernetes
+status:
+  phase: Active

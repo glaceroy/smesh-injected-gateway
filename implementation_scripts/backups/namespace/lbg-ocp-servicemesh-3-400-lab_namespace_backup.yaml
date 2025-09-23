@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-options: PruneLast=true
+    argocd.argoproj.io/sync-wave: '-5'
+    contact: aiyaz.khan
+    kubectl.kubernetes.io/last-applied-configuration: '{"apiVersion":"v1","kind":"Namespace","metadata":{"annotations":{"argocd.argoproj.io/sync-options":"PruneLast=true","argocd.argoproj.io/sync-wave":"-5","contact":"aiyaz.khan","openshift.io/description":"Engineering
+      namespace","openshift.io/display-name":"Engineering namespace","openshift.io/display-namespace":"Engineering
+      namespace","openshift.io/node-selector":"node-role.kubernetes.io/app="},"labels":{"AD_group":"GG_OCP_CLOUD_LAB_GROUP","CMDB_AppID":"AL10432","app.kubernetes.io/instance":"namespace-definitions","argocd.argoproj.io/managed-by":"openshift-gitops","cluster":"ocp.cloud.lab","namespace":"lbg-ocp-servicemesh-3-400-lab","snow":"IT.OCP.CLOUD.LAB"},"name":"lbg-ocp-servicemesh-3-400-lab"}}
+
+      '
+    openshift.io/description: Engineering namespace
+    openshift.io/display-name: Engineering namespace
+    openshift.io/display-namespace: Engineering namespace
+    openshift.io/node-selector: node-role.kubernetes.io/app=
+    openshift.io/sa.scc.mcs: s0:c26,c25
+    openshift.io/sa.scc.supplemental-groups: 1000700000/10000
+    openshift.io/sa.scc.uid-range: 1000700000/10000
+  creationTimestamp: '2025-06-18T06:59:22Z'
+  labels:
+    AD_group: GG_OCP_CLOUD_LAB_GROUP
+    CMDB_AppID: AL10432
+    app.kubernetes.io/instance: namespace-definitions
+    argocd.argoproj.io/managed-by: openshift-gitops
+    cluster: ocp.cloud.lab
+    kiali.io/member-of: istio-system
+    kubernetes.io/metadata.name: lbg-ocp-servicemesh-3-400-lab
+    maistra.io/member-of: istio-system
+    namespace: lbg-ocp-servicemesh-3-400-lab
+    openshift-pipelines.tekton.dev/namespace-reconcile-version: 1.15.1
+    pod-security.kubernetes.io/audit: baseline
+    pod-security.kubernetes.io/audit-version: v1.24
+    pod-security.kubernetes.io/warn: baseline
+    pod-security.kubernetes.io/warn-version: v1.24
+    snow: IT.OCP.CLOUD.LAB
+  name: lbg-ocp-servicemesh-3-400-lab
+  resourceVersion: '267194026'
+  uid: cdc1ce98-7e3e-4706-be8d-2f64a9506cc7
+spec:
+  finalizers:
+  - kubernetes
+status:
+  phase: Active

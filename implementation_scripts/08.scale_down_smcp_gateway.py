@@ -7,6 +7,7 @@ Description   : This script scales down the replicas of the SMCP gateways
 """
 
 import argparse
+import os
 import logging
 import subprocess
 import sys
@@ -14,6 +15,13 @@ import types
 from datetime import datetime
 
 import yaml
+
+from urllib3.exceptions import InsecureRequestWarning
+import requests
+
+import kubernetes.client.rest
+import yaml
+from kubernetes import client
 
 
 def log_newline(self, how_many_lines=1):
@@ -77,59 +85,52 @@ def scale_down_replicas(namespace, gateway):
         logger.info(f"DRY RUN Command: '{output.stdout}'")
         logger.newline()
     else:
-        # Set the expected number of replicas for a given gateway.
-        output = subprocess.run(
-            [
-                "oc",
-                "scale",
-                "deployment",
-                gateway,
-                "--replicas",
-                str(replicas),
-                "-n",
-                namespace,
-            ],
-            capture_output=True,
-            text=True,
-        )
-        if output.returncode != 0:
-            logger.error(
-                f"Failed to scale deployment in namespace '{namespace}': {output.stderr}"
+        try:
+            # Scale down the deployment
+            apps_api.patch_namespaced_deployment_scale(
+                name=gateway,
+                namespace=namespace,
+                body={"spec": {"replicas": replicas}},
+            )
+            logger.info(
+                f"Scaled down deployment '{gateway}' in namespace '{namespace}' to {replicas} replicas."
             )
 
-        logger.info(f"Scaled deployment '{gateway}' to '{replicas}' replicas")
-
-        replica_count = get_replica_count(namespace, gateway)
-
-        logger.info(
-            f"Current replica count for deployment '{gateway}' is '{replica_count}' replicas"
-        )
-        logger.newline()
+            # Verify the scaling operation
+            current_replicas = get_replica_count(namespace, gateway)
+            if current_replicas == replicas:
+                logger.info(
+                    f"Verification successful: Deployment '{gateway}' in namespace '{namespace}' is now at {current_replicas} replicas."
+                )
+            else:
+                logger.error(
+                    f"Verification failed: Deployment '{gateway}' in namespace '{namespace}' is at {current_replicas} replicas, expected {replicas}."
+                )
+            logger.newline()
+        except kubernetes.client.exceptions.ApiException as e:
+            logger.error(
+                f"Error scaling down deployment '{gateway}' in namespace '{namespace}'"
+            )
+            logger.error("Error details: ")
+            logger.error(f" - Reason: {e.reason}")
+            logger.error(f" - Status: {e.status}")
+            logger.error(f" - Message: {e.body}")
 
 
 def get_replica_count(namespace, gateway):
 
-    output = subprocess.run(
-        [
-            "oc",
-            "get",
-            "deployment",
-            gateway,
-            "-n",
-            namespace,
-            "-o",
-            "jsonpath='{.spec.replicas}'",
-        ],
-        capture_output=True,
-        text=True,
-    )
-    if output.returncode != 0:
-        logger.error(
-            f"Failed to get replica count for deployment '{gateway}' in namespace '{namespace}': {output.stderr}"
+    try:
+        deployment = apps_api.read_namespaced_deployment(
+            name=gateway, namespace=namespace
         )
+        return deployment.status.replicas if deployment.status.replicas is not None else 0
+    except kubernetes.client.exceptions.ApiException as e:
+        logger.error(f"Error retrieving deployment '{gateway}' in namespace '{namespace}'")
+        logger.error("Error details: ")
+        logger.error(f" - Reason: {e.reason}")
+        logger.error(f" - Status: {e.status}")
+        logger.error(f" - Message: {e.body}")
         return None
-
-    return int(output.stdout.strip().strip("'"))
 
 
 def check_namespace(namespace):
@@ -149,19 +150,20 @@ def check_namespace(namespace):
 
 def check_deployment(namespace, gateway_id):
 
-    # Check if a deployment exists in a given namespace.
-    output = subprocess.run(
-        ["oc", "get", "deployment", gateway_id, "-n", namespace],
-        capture_output=True,
-        text=True,
-    )
-    if output.returncode != 0:
-        logger.warning(
-            f"Deployment '{gateway_id}' does not exist in namespace '{namespace}'. Moving on!"
-        )
+    try:
+        apps_api.read_namespaced_deployment(name=gateway_id, namespace=namespace)
+        logger.info(f"Deployment '{gateway_id}' exists in namespace '{namespace}'.")
+        return True
+    except kubernetes.client.exceptions.ApiException as e:
+        if e.status == 404:
+            logger.error(f"Deployment '{gateway_id}' does not exist in namespace '{namespace}'.")
+        else:
+            logger.error(f"Error checking deployment '{gateway_id}' in namespace '{namespace}'")
+            logger.error("Error details: ")
+            logger.error(f" - Reason: {e.reason}")
+            logger.error(f" - Status: {e.status}")
+            logger.error(f" - Message: {e.body}")
         return False
-    logger.info(f"Deployment '{gateway_id}' exists in namespace '{namespace}'.")
-    return True
 
 
 def check_login():
@@ -231,6 +233,44 @@ def main():
 if __name__ == "__main__":
     # Set global logger
     logger = create_logger()
+    
+        # Configure the Kubernetes client to connect to the OpenShift cluster.
+    output = subprocess.run(
+        ["oc", "whoami", "-t"],
+        capture_output=True,
+        text=True,
+    )
+    if output.returncode != 0:
+        logger.error("Unable to set KUBERNETES_TOKEN environment variable. Exiting...")
+        sys.exit(1)  # Exit if the token is not set
+    else:
+        os.environ["KUBERNETES_TOKEN"] = output.stdout.strip()
+
+    # Configure the Kubernetes client
+    configuration = client.Configuration()
+    configuration.api_key_prefix = {"authorization": "Bearer"}
+    configuration.api_key = {
+        "authorization": os.environ.get("KUBERNETES_TOKEN", "")
+    }  # Ensure the token is set in the environment variable
+    if not configuration.api_key["authorization"]:
+        logger.error("KUBERNETES_TOKEN environment variable is not set. Exiting...")
+        sys.exit(1)  # Exit if the token is not set
+    configuration.host = os.environ.get(
+        "KUBERNETES_HOST", ""
+    )  # Ensure the host is set in the environment variable
+    if not configuration.host:
+        logger.error("KUBERNETES_HOST environment variable is not set. Exiting...")
+        sys.exit(1)  # Exit if the host is not set
+    configuration.verify_ssl = (
+        False  # Disable SSL verification for local testing; set to True in production
+    )
+
+    api_client = client.ApiClient(configuration)
+
+    global core_api, apps_api, auth_api  # Declare core_api and apps_api as global variables to use them in other functions
+    core_api = client.CoreV1Api(api_client)
+    apps_api = client.AppsV1Api(api_client)
+    auth_api = client.RbacAuthorizationV1Api(api_client)
 
     parser = argparse.ArgumentParser("scale_down_smcp_gateway")
     parser.add_argument(

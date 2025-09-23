@@ -127,7 +127,7 @@ def main():
                                 "enabled"
                             ] = False
 
-                update_config_file(cluster_values)
+        update_config_file(cluster_values)
 
     logger.info("Cluster values config file is updated.. !")
     logger.newline()

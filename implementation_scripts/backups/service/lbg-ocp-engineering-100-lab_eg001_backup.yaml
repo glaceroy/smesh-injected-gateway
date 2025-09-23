@@ -1,0 +1,53 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: '{"apiVersion":"v1","kind":"Service","metadata":{"annotations":{"maistra.io/mesh-generation":"2.6.9-1-172"},"labels":{"app":"eg001","app.kubernetes.io/component":"istio-egress","app.kubernetes.io/instance":"istio-system","app.kubernetes.io/managed-by":"maistra-istio-operator","app.kubernetes.io/name":"istio-egress","app.kubernetes.io/part-of":"istio","app.kubernetes.io/version":"2.6.9-1-172","istio":"egressgateway","istio.io/rev":"app-mesh-01","maistra-version":"2.6.9","maistra.io/owner":"istio-system","maistra.io/owner-name":"app-mesh-01","release":"istio"},"name":"eg001","namespace":"lbg-ocp-engineering-100-lab"},"spec":{"ports":[{"name":"http2","port":80,"protocol":"TCP","targetPort":8080},{"name":"https","port":443,"protocol":"TCP","targetPort":8443}],"selector":{"app":"eg001","istio":"egressgateway"},"type":"ClusterIP"}}
+
+      '
+    maistra.io/mesh-generation: 2.6.9-1-172
+    meta.helm.sh/release-name: service-mesh-injected-gateway
+    meta.helm.sh/release-namespace: istio-system
+  creationTimestamp: '2025-09-17T08:27:28Z'
+  labels:
+    app: eg001
+    app.kubernetes.io/component: istio-egress
+    app.kubernetes.io/instance: istio-system
+    app.kubernetes.io/managed-by: maistra-istio-operator
+    app.kubernetes.io/name: istio-egress
+    app.kubernetes.io/part-of: istio
+    app.kubernetes.io/version: 2.6.9-1-234
+    istio: egressgateway
+    istio.io/rev: app-mesh-01
+    maistra-version: 2.6.9
+    maistra.io/owner: istio-system
+    maistra.io/owner-name: app-mesh-01
+    release: istio
+  name: eg001
+  namespace: lbg-ocp-engineering-100-lab
+  resourceVersion: '291679140'
+  uid: 94d477fe-a890-4356-af4b-c380010ddd97
+spec:
+  clusterIP: 172.30.229.172
+  clusterIPs:
+  - 172.30.229.172
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - name: http2
+    port: 80
+    protocol: TCP
+    targetPort: 8080
+  - name: https
+    port: 443
+    protocol: TCP
+    targetPort: 8443
+  selector:
+    app: eg001
+    istio: egressgateway
+  sessionAffinity: None
+  type: ClusterIP
+status:
+  loadBalancer: {}

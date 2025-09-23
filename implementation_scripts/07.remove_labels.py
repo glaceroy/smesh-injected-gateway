@@ -1,9 +1,9 @@
 """
-Filename      : remove_service_labels.py
+Filename      : remove_labels.py
 Author        : Aiyaz Khan
 Maintained by : Kyndryl Engineering
 Version       : 1.0
-Description   : This script removes the SMCP operator ownership labels in ingress/egress k8s service.
+Description   : This script removes all existing labels from service and service accounts.
 """
 
 
@@ -38,7 +38,7 @@ def create_logger():
     # Create a handler
     sh = logging.StreamHandler(sys.stdout)
     handler = logging.FileHandler(
-        f"./logs/{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}_remove_service_labels.log",
+        f"./logs/{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}_remove_labels.log",
         mode="w",
         encoding="utf-8",
     )
@@ -66,40 +66,159 @@ def create_logger():
 
     return logger
 
-def service_labels_exists(namespace, service):
-    
-    # Check if the specified service in the given namespace has the SMCP operator ownership labels.
+
+def check_role_exists(namespace, role):
+
+    # Check if a role exists in the given namespace.
     try:
-        svc = core_api.read_namespaced_service(service, namespace)
-        labels = svc.metadata.labels
-        if labels and "app.kubernetes.io/managed-by: maistra-istio-operator" in labels:
-            logger.info(
-                f"Service '{service}' in namespace '{namespace}' has the label 'app.kubernetes.io/managed-by: maistra-istio-operator'."
-            )
-            return True
+        role =  auth_api.read_namespaced_role(role, namespace)
+        logger.info(f"Role '{role.metadata.name}' exists in namespace '{namespace}'.")
+        return True
+    except kubernetes.client.rest.ApiException as e:
+        if e.status == 404:
+            logger.warning(f"Role '{role}' not found in namespace '{namespace}'. Moving on !")
         else:
-            logger.info(
-                f"Service '{service}' in namespace '{namespace}' does not have the label 'app.kubernetes.io/managed-by: maistra-istio-operator'."
-            )
-            return False
+            logger.error(f"Error checking Role '{role}' in namespace '{namespace}'")
+            logger.error("Error details: ")
+            logger.error(f" - Reason: {e.reason}")
+            logger.error(f" - Status: {e.status}")
+            logger.error(f" - Message: {e.body}")
+        return False
+    
+    
+def remove_role_label(namespace, role, labels_to_remove):
+    
+    # Remove the SMCP operator ownership labels from the specified role in the given namespace.
+    try:
+        body = {
+            "metadata": {
+                "labels": {
+                    label: None for label in labels_to_remove
+                }
+            }
+        }
+        auth_api.patch_namespaced_role(
+            name=role,
+            namespace=namespace,
+            body=body,
+        )
+        logger.info(
+            f"Labels removed successfully from Role '{role}' in namespace '{namespace}'."
+        )
     except kubernetes.client.rest.ApiException as e:
         logger.error(
-            f"Error checking labels for service '{service}' in namespace '{namespace}'"
+            f"Error removing labels from Role '{role}' in namespace '{namespace}'"
         )
         logger.error("Error details: ")
         logger.error(f" - Reason: {e.reason}")
         logger.error(f" - Status: {e.status}")
         logger.error(f" - Message: {e.body}")
+        
+        
+def check_role_binding_exists(namespace, role_binding):
+    
+    # Check if a role binding exists in the given namespace.
+    try:
+        role_binding = auth_api.read_namespaced_role_binding(role_binding, namespace)
+        logger.info(f"Role Binding '{role_binding.metadata.name}' exists in namespace '{namespace}'.")
+        return True
+    except kubernetes.client.rest.ApiException as e:
+        if e.status == 404:
+            logger.warning(f"Role Binding '{role_binding}' not found in namespace '{namespace}'. Moving on !")
+        else:
+            logger.error(f"Error checking Role Binding '{role_binding}' in namespace '{namespace}'")
+            logger.error("Error details: ")
+            logger.error(f" - Reason: {e.reason}")
+            logger.error(f" - Status: {e.status}")
+            logger.error(f" - Message: {e.body}")
         return False
 
-def remove_service_label(namespace, service):
+
+def remove_role_binding_label(namespace, role_binding, labels_to_remove):
+
+    # Remove the SMCP operator ownership labels from the specified role binding in the given namespace.
+    try:
+        body = {
+            "metadata": {
+                "labels": {
+                    label: None for label in labels_to_remove
+                }
+            }
+        }
+        auth_api.patch_namespaced_role_binding(
+            name=role_binding,
+            namespace=namespace,
+            body=body,
+        )
+        logger.info(
+            f"Labels removed successfully from Role Binding '{role_binding}' in namespace '{namespace}'."
+        )
+    except kubernetes.client.rest.ApiException as e:
+        logger.error(
+            f"Error removing labels from Role Binding '{role_binding}' in namespace '{namespace}'"
+        )
+        logger.error("Error details: ")
+        logger.error(f" - Reason: {e.reason}")
+        logger.error(f" - Status: {e.status}")
+        logger.error(f" - Message: {e.body}")
+
+
+def check_sa_exists(namespace, service_account):
+
+    # Check if a service account exists in the given namespace.
+    try:
+        sa = core_api.read_namespaced_service_account(service_account, namespace)
+        logger.info(f"Service Account '{sa.metadata.name}' exists in namespace '{namespace}'.")
+        return True
+    except kubernetes.client.rest.ApiException as e:
+        if e.status == 404:
+            logger.warning(f"Service Account '{service_account}' not found in namespace '{namespace}'. Moving on !")
+        else:
+            logger.error(f"Error checking Service Account '{service_account}' in namespace '{namespace}'")
+            logger.error("Error details: ")
+            logger.error(f" - Reason: {e.reason}")
+            logger.error(f" - Status: {e.status}")
+            logger.error(f" - Message: {e.body}")
+        return False
+    
+    
+def remove_sa_label(namespace, service_account, labels_to_remove):
+    
+    # Remove the SMCP operator ownership labels from the specified service account in the given namespace.
+    try:
+        body = {
+            "metadata": {
+                "labels": {
+                    label: None for label in labels_to_remove
+                }
+            }
+        }
+        core_api.patch_namespaced_service_account(
+            name=service_account,
+            namespace=namespace,
+            body=body,
+        )
+        logger.info(
+            f"Labels removed successfully from Service Account '{service_account}' in namespace '{namespace}'."
+        )
+    except kubernetes.client.rest.ApiException as e:
+        logger.error(
+            f"Error removing labels from Service Account '{service_account}' in namespace '{namespace}'"
+        )
+        logger.error("Error details: ")
+        logger.error(f" - Reason: {e.reason}")
+        logger.error(f" - Status: {e.status}")
+        logger.error(f" - Message: {e.body}")
+
+
+def remove_service_label(namespace, service, labels_to_remove):
     
     # Remove the SMCP operator ownership labels from the specified service in the given namespace.
     try:
         body = {
             "metadata": {
                 "labels": {
-                    "app.kubernetes.io/managed-by": None,
+                    label: None for label in labels_to_remove
                 }
             }
         }
@@ -119,6 +238,7 @@ def remove_service_label(namespace, service):
         logger.error(f" - Reason: {e.reason}")
         logger.error(f" - Status: {e.status}")
         logger.error(f" - Message: {e.body}")
+
 
 def check_service_exists(namespace, service):
 
@@ -157,7 +277,7 @@ def check_namespace(namespace):
             logger.error(f" - Status: {e.status}")
             logger.error(f" - Message: {e.body}")
         return False
-
+    
 
 def check_login():
 
@@ -190,6 +310,20 @@ def main():
         capture_output=True,
     )
     smcp = yaml.safe_load(output.stdout)
+    
+    labels_to_remove = [
+        "app.kubernetes.io/component",
+        "app.kubernetes.io/instance",
+        "app.kubernetes.io/managed-by",
+        "app.kubernetes.io/name",
+        "app.kubernetes.io/part-of",
+        "app.kubernetes.io/version",
+        "istio.io/rev",
+        "maistra-version",
+        "maistra.io/owner",
+        "maistra.io/owner-name",
+        "release"
+    ]
 
     logger.info(
         "============================   Starting Script Execution.  ============================"
@@ -208,13 +342,23 @@ def main():
                 # Check if namespace exists
                 if check_namespace(namespace):
                     if check_service_exists(namespace, gateway_id):
-                        if service_labels_exists(namespace, gateway_id):
-                            remove_service_label(namespace, gateway_id) 
+                        remove_service_label(namespace, gateway_id, labels_to_remove)
+                        if check_sa_exists(namespace, f"{gateway_id}-service-account"):
+                            remove_sa_label(namespace, f"{gateway_id}-service-account", labels_to_remove)
+                            if check_role_exists(namespace, f"{gateway_id}-sds"):
+                                remove_role_label(namespace, f"{gateway_id}-sds", labels_to_remove)
+                                if check_role_binding_exists(namespace, f"{gateway_id}-sds"):
+                                    remove_role_binding_label(namespace, f"{gateway_id}-sds", labels_to_remove)
 
-                        logger.newline()
-                        logger.info(
-                            "====================================================================================="
-                        )
+                                    logger.newline()
+                                    logger.info(
+                                        "====================================================================================="
+                                    )
+                                else:
+                                    logger.newline()
+                                    logger.info(
+                                        "====================================================================================="
+                                    )
 
     logger.newline()
     logger.info(
@@ -261,9 +405,10 @@ if __name__ == "__main__":
 
     api_client = client.ApiClient(configuration)
 
-    global core_api, apps_api  # Declare core_api and apps_api as global variables to use them in other functions
+    global core_api, apps_api, auth_api  # Declare core_api and apps_api as global variables to use them in other functions
     core_api = client.CoreV1Api(api_client)
     apps_api = client.AppsV1Api(api_client)
+    auth_api = client.RbacAuthorizationV1Api(api_client)
 
     # Run the main function
     main()

@@ -1,0 +1,57 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: '{"apiVersion":"v1","kind":"Service","metadata":{"annotations":{"maistra.io/mesh-generation":"2.6.9-1-172"},"labels":{"app":"ig005","app.kubernetes.io/component":"istio-ingress","app.kubernetes.io/instance":"istio-system","app.kubernetes.io/managed-by":"maistra-istio-operator","app.kubernetes.io/name":"istio-ingress","app.kubernetes.io/part-of":"istio","app.kubernetes.io/version":"2.6.9-1-172","istio":"ingressgateway","istio.io/rev":"app-mesh-01","maistra-version":"2.6.9","maistra.io/owner":"istio-system","maistra.io/owner-name":"app-mesh-01","release":"istio"},"name":"ig005","namespace":"lbg-ocp-servicemesh-3-400-lab"},"spec":{"ports":[{"name":"status-port","port":15021,"protocol":"TCP","targetPort":15021},{"name":"http2","port":80,"protocol":"TCP","targetPort":8080},{"name":"https","port":443,"protocol":"TCP","targetPort":8443}],"selector":{"app":"ig005","istio":"ingressgateway"},"type":"ClusterIP"}}
+
+      '
+    maistra.io/mesh-generation: 2.6.9-1-172
+    meta.helm.sh/release-name: service-mesh-injected-gateway
+    meta.helm.sh/release-namespace: istio-system
+  creationTimestamp: '2025-09-17T08:27:25Z'
+  labels:
+    app: ig005
+    app.kubernetes.io/component: istio-ingress
+    app.kubernetes.io/instance: istio-system
+    app.kubernetes.io/managed-by: maistra-istio-operator
+    app.kubernetes.io/name: istio-ingress
+    app.kubernetes.io/part-of: istio
+    app.kubernetes.io/version: 2.6.9-1-234
+    istio: ingressgateway
+    istio.io/rev: app-mesh-01
+    maistra-version: 2.6.9
+    maistra.io/owner: istio-system
+    maistra.io/owner-name: app-mesh-01
+    release: istio
+  name: ig005
+  namespace: lbg-ocp-servicemesh-3-400-lab
+  resourceVersion: '291679228'
+  uid: cfa7d099-64ae-48af-8268-c1ded6f84930
+spec:
+  clusterIP: 172.30.249.86
+  clusterIPs:
+  - 172.30.249.86
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - name: status-port
+    port: 15021
+    protocol: TCP
+    targetPort: 15021
+  - name: http2
+    port: 80
+    protocol: TCP
+    targetPort: 8080
+  - name: https
+    port: 443
+    protocol: TCP
+    targetPort: 8443
+  selector:
+    app: ig005
+    istio: ingressgateway
+  sessionAffinity: None
+  type: ClusterIP
+status:
+  loadBalancer: {}

@@ -91,7 +91,7 @@ def display_current_values(namespace):
         logger.error(f" - Message: {e.body}")
 
 
-def patch_namespace_quota(namespace, quota_resource, value):
+def patch_namespace_quota(namespace, resources):
 
     quota_name = f"{namespace}-quota"
 
@@ -99,7 +99,7 @@ def patch_namespace_quota(namespace, quota_resource, value):
     patch_body = {
         "spec": {
             "hard": {
-                quota_resource: value
+                **resources
             }
         }
     }
@@ -168,6 +168,16 @@ def revert_back_original(namespace):
     logger.info(f" - Memory Limits      : {limits_memory}")
     
     logger.newline()
+    
+    resources = {
+        "requests.cpu": requests_cpu,
+        "requests.memory": requests_memory,
+        "limits.cpu": limits_cpu,
+        "limits.memory": limits_memory
+    }
+
+    patch_namespace_quota(namespace, resources)
+
     display_current_values(namespace)
 
 

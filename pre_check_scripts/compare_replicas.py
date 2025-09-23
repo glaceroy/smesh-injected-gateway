@@ -13,6 +13,11 @@ import subprocess
 import sys
 import types
 from datetime import datetime
+from urllib3.exceptions import InsecureRequestWarning
+import requests
+
+import kubernetes.client.rest
+from kubernetes import client
 
 import yaml
 
@@ -107,65 +112,67 @@ def get_values_replicas(ns, gateway_type, values_file):
 
 def get_cluster_replicas(namespace, gateway_id):
 
-    # Get the current number of replicas for a given gateway.
-    output = subprocess.run(
-        [
-            "oc",
-            "get",
-            "deployment",
-            gateway_id,
-            "-n",
-            namespace,
-            "-o",
-            "jsonpath={.spec.replicas}",
-        ],
-        capture_output=True,
-        text=True,
-    )
-    if output.returncode != 0:
-        logger.error(
-            f"Failed to get replicas for deployment {gateway_id} in namespace {namespace}: {output.stderr}"
-        )
-        sys.exit(1)
+    # Get the current number of replicas for a given deployment in a given namespace.
     try:
-        current_replicas = int(output.stdout.strip())
-    except ValueError:
+        requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+        deployment = apps_api.read_namespaced_deployment(gateway_id, namespace)
+        replicas = deployment.spec.replicas
+        return replicas
+    except kubernetes.client.rest.ApiException as e:
         logger.error(
-            f"Failed to parse replicas for deployment {gateway_id} in namespace {namespace}: {output.stdout}"
+            f"Error getting replicas for deployment '{gateway_id}' in namespace '{namespace}'"
         )
-        sys.exit(1)
-    return current_replicas
+        logger.error("Error details: ")
+        logger.error(f" - Reason: {e.reason}")
+        logger.error(f" - Status: {e.status}")
+        logger.error(f" - Message: {e.body}")
+        return None
 
 
 def check_namespace(namespace):
 
-    # Check if a namespace exists.
-    output = subprocess.run(
-        ["oc", "get", "namespace", namespace],
-        capture_output=True,
-        text=True,
-    )
-    if output.returncode != 0:
-        logger.error(f"Namespace {namespace} does not exist.")
+    # Check if a namespace exists in the cluster.
+    try:
+        requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+        namespace = core_api.read_namespace(namespace)
+        logger.info(f"Namespace '{namespace.metadata.name}' exists.")
+        return True
+    except kubernetes.client.rest.ApiException as e:
+        if e.status == 404:
+            logger.warning(f"Namespace '{namespace}' not found. Moving on !")
+        else:
+            logger.error(f"Error checking namespace '{namespace}'")
+            logger.error("Error details: ")
+            logger.error(f" - Reason: {e.reason}")
+            logger.error(f" - Status: {e.status}")
+            logger.error(f" - Message: {e.body}")
         return False
-
-    return True
 
 
 def check_deployment(namespace, gateway_id):
 
     # Check if a deployment exists in a given namespace.
-    output = subprocess.run(
-        ["oc", "get", "deployment", gateway_id, "-n", namespace],
-        capture_output=True,
-        text=True,
-    )
-    if output.returncode != 0:
-        logger.warning(
-            f"Deployment {gateway_id} does not exist in namespace {namespace}. Moving on!"
+    try:
+        requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+        deployment = apps_api.read_namespaced_deployment(gateway_id, namespace)
+        logger.info(
+            f"Deployment '{deployment.metadata.name}' exists in namespace '{namespace}'."
         )
+        return True
+    except kubernetes.client.rest.ApiException as e:
+        if e.status == 404:
+            logger.warning(
+                f"Deployment '{gateway_id}' not found in namespace '{namespace}'. Moving on !"
+            )
+        else:
+            logger.error(
+                f"Error checking deployment '{gateway_id}' in namespace '{namespace}'"
+            )
+            logger.error("Error details: ")
+            logger.error(f" - Reason: {e.reason}")
+            logger.error(f" - Status: {e.status}")
+            logger.error(f" - Message: {e.body}")
         return False
-    return True
 
 
 def check_login():
@@ -183,8 +190,6 @@ def check_login():
 
 
 def main():
-
-    check_login()
 
     if not os.path.isfile(values_file):
         logger.error(f"Required input file {values_file} does not exist. Exiting.. !")
@@ -287,6 +292,21 @@ if __name__ == "__main__":
     # Set global logger
     logger = create_logger()
 
+    check_login()
+
+    # Configure the Kubernetes client to connect to the OpenShift cluster.
+    output = subprocess.run(
+        ["oc", "whoami", "-t"],
+        capture_output=True,
+        text=True,
+    )
+    if output.returncode != 0:
+        logger.error("Unable to set KUBERNETES_TOKEN environment variable. Exiting...")
+        sys.exit(1)  # Exit if the token is not set
+    else:
+        os.environ["KUBERNETES_TOKEN"] = output.stdout.strip()
+        
+        
     # Check if two arguments are provided (not counting the script name)
     if len(sys.argv) != 2:
         logger.info("USAGE: python compare_replicas.py <cluster_values.yaml>")
@@ -295,4 +315,31 @@ if __name__ == "__main__":
 
     values_file = sys.argv[1]
 
+    # Configure the Kubernetes client
+    configuration = client.Configuration()
+    configuration.api_key_prefix = {"authorization": "Bearer"}
+    configuration.api_key = {
+        "authorization": os.environ.get("KUBERNETES_TOKEN", "")
+    }  # Ensure the token is set in the environment variable
+    if not configuration.api_key["authorization"]:
+        logger.error("KUBERNETES_TOKEN environment variable is not set. Exiting...")
+        sys.exit(1)  # Exit if the token is not set
+    configuration.host = os.environ.get(
+        "KUBERNETES_HOST", ""
+    )  # Ensure the host is set in the environment variable
+    if not configuration.host:
+        logger.error("KUBERNETES_HOST environment variable is not set. Exiting...")
+        sys.exit(1)  # Exit if the host is not set
+    configuration.verify_ssl = (
+        False  # Disable SSL verification for local testing; set to True in production
+    )
+
+    api_client = client.ApiClient(configuration)
+
+    global core_api, apps_api, auth_api  # Declare core_api and apps_api as global variables to use them in other functions
+    core_api = client.CoreV1Api(api_client)
+    apps_api = client.AppsV1Api(api_client)
+    auth_api = client.RbacAuthorizationV1Api(api_client)
+
+    # Run the main function
     main()

@@ -1,0 +1,40 @@
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: '{"apiVersion":"v1","kind":"ResourceQuota","metadata":{"annotations":{},"labels":{"app.kubernetes.io/instance":"namespace-definitions"},"name":"lbg-ocp-servicemesh-3-400-lab-quota","namespace":"lbg-ocp-servicemesh-3-400-lab"},"spec":{"hard":{"limits.cpu":"10","limits.memory":"12Gi","persistentvolumeclaims":"2","pods":10,"requests.cpu":"10","requests.memory":"12Gi","requests.storage":"2"}}}
+
+      '
+  creationTimestamp: '2025-06-18T06:59:34Z'
+  labels:
+    app.kubernetes.io/instance: namespace-definitions
+  name: lbg-ocp-servicemesh-3-400-lab-quota
+  namespace: lbg-ocp-servicemesh-3-400-lab
+  resourceVersion: '291802479'
+  uid: 8693da17-021f-4aca-804c-0464fe2be1a4
+spec:
+  hard:
+    limits.cpu: '32'
+    limits.memory: 56Gi
+    persistentvolumeclaims: '2'
+    pods: '10'
+    requests.cpu: '32'
+    requests.memory: 56Gi
+    requests.storage: '2'
+status:
+  hard:
+    limits.cpu: '32'
+    limits.memory: 56Gi
+    persistentvolumeclaims: '2'
+    pods: '10'
+    requests.cpu: '32'
+    requests.memory: 56Gi
+    requests.storage: '2'
+  used:
+    limits.cpu: 2650m
+    limits.memory: 1752Mi
+    persistentvolumeclaims: '0'
+    pods: '4'
+    requests.cpu: 510m
+    requests.memory: 706Mi
+    requests.storage: '0'
