@@ -1,3 +1,0 @@
-[Mon, 29 Sep 2025 13:45:04]     INFO : ============================   Starting Script Execution.  ============================
-[Mon, 29 Sep 2025 13:45:04]     INFO : The required file input_namespace.yaml exists.
-[Mon, 29 Sep 2025 13:45:04]     INFO : The required file /root/gitops-onboarding/ocp-cloud-lab/helm/cluster_values.yaml exists.
