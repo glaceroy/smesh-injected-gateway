@@ -1,0 +1,35 @@
+[Mon, 29 Sep 2025 13:54:08]     INFO : ============================   Starting Script Execution.  ============================
+[Mon, 29 Sep 2025 13:54:08]     INFO : The required file input_namespace.yaml exists.
+[Mon, 29 Sep 2025 13:54:08]     INFO : The required file /root/gitops-onboarding/ocp-cloud-lab/helm/cluster_values.yaml exists.
+[Mon, 29 Sep 2025 13:54:09]     INFO : Namespace 'lbg-ocp-engineering-100-lab' exists.
+[Mon, 29 Sep 2025 13:54:09]     INFO : Service 'eg001' exists in namespace 'lbg-ocp-engineering-100-lab'.
+[Mon, 29 Sep 2025 13:54:09]     INFO : Labels removed successfully from service 'eg001' in namespace 'lbg-ocp-engineering-100-lab'.
+[Mon, 29 Sep 2025 13:54:09]     INFO : Namespace 'lbg-ocp-engineering-100-lab' exists.
+[Mon, 29 Sep 2025 13:54:09]     INFO : Service 'ig001' exists in namespace 'lbg-ocp-engineering-100-lab'.
+[Mon, 29 Sep 2025 13:54:09]     INFO : Labels removed successfully from service 'ig001' in namespace 'lbg-ocp-engineering-100-lab'.
+[Mon, 29 Sep 2025 13:54:09]     INFO : Namespace 'lbg-ocp-bookinfo-200-test' exists.
+[Mon, 29 Sep 2025 13:54:09]     INFO : Service 'eg002' exists in namespace 'lbg-ocp-bookinfo-200-test'.
+[Mon, 29 Sep 2025 13:54:09]     INFO : Labels removed successfully from service 'eg002' in namespace 'lbg-ocp-bookinfo-200-test'.
+[Mon, 29 Sep 2025 13:54:09]     INFO : Namespace 'lbg-ocp-bookinfo-200-test' exists.
+[Mon, 29 Sep 2025 13:54:09]     INFO : Service 'ig002' exists in namespace 'lbg-ocp-bookinfo-200-test'.
+[Mon, 29 Sep 2025 13:54:09]     INFO : Labels removed successfully from service 'ig002' in namespace 'lbg-ocp-bookinfo-200-test'.
+[Mon, 29 Sep 2025 13:54:09]     INFO : Namespace 'lbg-ocp-bookinfo-300-prod' exists.
+[Mon, 29 Sep 2025 13:54:09]     INFO : Service 'eg003' exists in namespace 'lbg-ocp-bookinfo-300-prod'.
+[Mon, 29 Sep 2025 13:54:09]     INFO : Labels removed successfully from service 'eg003' in namespace 'lbg-ocp-bookinfo-300-prod'.
+[Mon, 29 Sep 2025 13:54:09]     INFO : Namespace 'lbg-ocp-bookinfo-300-prod' exists.
+[Mon, 29 Sep 2025 13:54:09]     INFO : Service 'ig003' exists in namespace 'lbg-ocp-bookinfo-300-prod'.
+[Mon, 29 Sep 2025 13:54:09]     INFO : Labels removed successfully from service 'ig003' in namespace 'lbg-ocp-bookinfo-300-prod'.
+[Mon, 29 Sep 2025 13:54:09]     INFO : Namespace 'lbg-ocp-injected-gw-400-lab' exists.
+[Mon, 29 Sep 2025 13:54:09]     INFO : Service 'eg004' exists in namespace 'lbg-ocp-injected-gw-400-lab'.
+[Mon, 29 Sep 2025 13:54:09]     INFO : Labels removed successfully from service 'eg004' in namespace 'lbg-ocp-injected-gw-400-lab'.
+[Mon, 29 Sep 2025 13:54:09]     INFO : Namespace 'lbg-ocp-injected-gw-400-lab' exists.
+[Mon, 29 Sep 2025 13:54:09]     INFO : Service 'ig004' exists in namespace 'lbg-ocp-injected-gw-400-lab'.
+[Mon, 29 Sep 2025 13:54:09]     INFO : Labels removed successfully from service 'ig004' in namespace 'lbg-ocp-injected-gw-400-lab'.
+[Mon, 29 Sep 2025 13:54:10]     INFO : Namespace 'lbg-ocp-servicemesh-3-400-lab' exists.
+[Mon, 29 Sep 2025 13:54:10]     INFO : Service 'eg005' exists in namespace 'lbg-ocp-servicemesh-3-400-lab'.
+[Mon, 29 Sep 2025 13:54:10]     INFO : Labels removed successfully from service 'eg005' in namespace 'lbg-ocp-servicemesh-3-400-lab'.
+[Mon, 29 Sep 2025 13:54:10]     INFO : Namespace 'lbg-ocp-servicemesh-3-400-lab' exists.
+[Mon, 29 Sep 2025 13:54:10]     INFO : Service 'ig005' exists in namespace 'lbg-ocp-servicemesh-3-400-lab'.
+[Mon, 29 Sep 2025 13:54:10]     INFO : Labels removed successfully from service 'ig005' in namespace 'lbg-ocp-servicemesh-3-400-lab'.
+
+[Mon, 29 Sep 2025 13:54:10]     INFO : ============================   Script Execution Completed.   ============================

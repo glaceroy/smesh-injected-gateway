@@ -1,9 +1,9 @@
 """
-Filename      : remove_role_rb.py
+Filename      : add_helm_adoption_labels.py
 Author        : Aiyaz Khan
 Maintained by : Kyndryl Engineering
 Version       : 1.0
-Description   : This script removes roles and role bindings.
+Description   : This script adds Helm adoption labels to services and service accounts.
 """
 
 
@@ -71,76 +71,56 @@ def create_logger():
 
     return logger
 
-def check_role_exists(namespace, role):
-
-    # Check if a role exists in the given namespace.
+def add_service_label(namespace, service):
+    
+    # Remove the SMCP operator ownership labels from the specified service in the given namespace.
     try:
-        role =  auth_api.read_namespaced_role(role, namespace)
-        logger.info(f"Role '{role.metadata.name}' exists in namespace '{namespace}'.")
+        body = {
+            "metadata": {
+                "labels": {
+                    "app.kubernetes.io/managed-by": "Helm"
+                },
+                "annotations": {
+                    "meta.helm.sh/release-name": "service-mesh-injected-gateway",
+                    "meta.helm.sh/release-namespace": "istio-system"
+                }
+            }
+        }
+        core_api.patch_namespaced_service(
+            name=service,
+            namespace=namespace,
+            body=body,
+        )
+        logger.info(
+            f"Labels added successfully to service '{service}' in namespace '{namespace}'."
+        )
+    except kubernetes.client.rest.ApiException as e:
+        logger.error(
+            f"Error adding labels to service '{service}' in namespace '{namespace}'"
+        )
+        logger.error("Error details: ")
+        logger.error(f" - Reason: {e.reason}")
+        logger.error(f" - Status: {e.status}")
+        logger.error(f" - Message: {e.body}")
+
+
+def check_service_exists(namespace, service):
+
+    # Check if a service exists in the given namespace.
+    try:
+        service = core_api.read_namespaced_service(service, namespace)
+        logger.info(f"Service '{service.metadata.name}' exists in namespace '{namespace}'.")
         return True
     except kubernetes.client.rest.ApiException as e:
         if e.status == 404:
-            logger.warning(f"Role '{role}' not found in namespace '{namespace}'. Moving on !")
+            logger.warning(f"Service '{service}' not found in namespace '{namespace}'. Moving on !")
         else:
-            logger.error(f"Error checking Role '{role}' in namespace '{namespace}'")
+            logger.error(f"Error checking service '{service}' in namespace '{namespace}'")
             logger.error("Error details: ")
             logger.error(f" - Reason: {e.reason}")
             logger.error(f" - Status: {e.status}")
             logger.error(f" - Message: {e.body}")
         return False
-
-
-def remove_role(namespace, role):
-
-    # Remove the specified role from the given namespace.
-    try:
-        auth_api.delete_namespaced_role(
-            name=role,
-            namespace=namespace,
-        )
-        logger.info(f"Role '{role}' removed successfully from namespace '{namespace}'.")
-    except kubernetes.client.rest.ApiException as e:
-        logger.error(f"Error removing Role '{role}' from namespace '{namespace}'")
-        logger.error("Error details: ")
-        logger.error(f" - Reason: {e.reason}")
-        logger.error(f" - Status: {e.status}")
-        logger.error(f" - Message: {e.body}")
-        
-        
-def check_role_binding_exists(namespace, role_binding):
-    
-    # Check if a role binding exists in the given namespace.
-    try:
-        role_binding = auth_api.read_namespaced_role_binding(role_binding, namespace)
-        logger.info(f"Role Binding '{role_binding.metadata.name}' exists in namespace '{namespace}'.")
-        return True
-    except kubernetes.client.rest.ApiException as e:
-        if e.status == 404:
-            logger.warning(f"Role Binding '{role_binding}' not found in namespace '{namespace}'. Moving on !")
-        else:
-            logger.error(f"Error checking Role Binding '{role_binding}' in namespace '{namespace}'")
-            logger.error("Error details: ")
-            logger.error(f" - Reason: {e.reason}")
-            logger.error(f" - Status: {e.status}")
-            logger.error(f" - Message: {e.body}")
-        return False
-    
-    
-def remove_role_binding(namespace, role_binding):
-
-    # Remove the specified role binding from the given namespace.
-    try:
-        auth_api.delete_namespaced_role_binding(
-            name=role_binding,
-            namespace=namespace,
-        )
-        logger.info(f"Role Binding '{role_binding}' removed successfully from namespace '{namespace}'.")
-    except kubernetes.client.rest.ApiException as e:
-        logger.error(f"Error removing Role Binding '{role_binding}' from namespace '{namespace}'")
-        logger.error("Error details: ")
-        logger.error(f" - Reason: {e.reason}")
-        logger.error(f" - Status: {e.status}")
-        logger.error(f" - Message: {e.body}")
 
 
 def check_namespace(namespace):
@@ -211,31 +191,30 @@ def main():
                 "Check the order of input files passed to the script. Exiting.. !"
             )
             logger.info(
-                "USAGE: python remove_role_rb.py <input_namespace.yaml> <cluster_values.yaml>"
+                "USAGE: python add_helm_adoption_labels.py <input_namespace.yaml> <cluster_values.yaml>"
             )
             logger.newline()
             sys.exit(1)
-            
+
         for ns_index, namespace in enumerate(cluster_values["project"]):
             if ns == namespace["namespace"]:
                 for index, key in enumerate(namespace):
                     if key == "egress":
+                        gw_id = cluster_values["project"][ns_index]["egress"]["id"]
                         if check_namespace(ns):
-                            if check_role_exists(namespace, f"injected-gateway-{key}-role"):
-                                remove_role(namespace, f"injected-gateway-{key}-role")
-                                if check_role_binding_exists(namespace, f"injected-gateway-{key}-rb"):
-                                    remove_role_binding(namespace, f"injected-gateway-{key}-rb")
+                            if check_service_exists(ns, f"eg{gw_id}"):
+                                add_service_label(ns, f"eg{gw_id}")
+                            
                     elif key == "ingress":
+                        gw_id = cluster_values["project"][ns_index]["ingress"]["id"]
                         if check_namespace(ns):
-                            if check_role_exists(namespace, f"injected-gateway-{key}-role"):
-                                remove_role(namespace, f"injected-gateway-{key}-role")
-                                if check_role_binding_exists(namespace, f"injected-gateway-{key}-rb"):
-                                    remove_role_binding(namespace, f"injected-gateway-{key}-rb")                    
+                            if check_service_exists(ns, f"ig{gw_id}"):
+                                add_service_label(ns, f"ig{gw_id}")
+                                
                     logger.newline()
                     logger.info(
                         "====================================================================================="
                     )
-                
 
     logger.newline()
     logger.info(

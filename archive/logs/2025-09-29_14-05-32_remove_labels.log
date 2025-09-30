@@ -1,0 +1,115 @@
+[Mon, 29 Sep 2025 14:05:33]     INFO : ============================   Starting Script Execution.  ============================
+[Mon, 29 Sep 2025 14:05:33]     INFO : The required file input_namespace.yaml exists.
+[Mon, 29 Sep 2025 14:05:33]     INFO : The required file /root/gitops-onboarding/ocp-cloud-lab/helm/cluster_values.yaml exists.
+
+[Mon, 29 Sep 2025 14:05:33]     INFO : =====================================================================================
+[Mon, 29 Sep 2025 14:05:33]     INFO : Namespace 'lbg-ocp-engineering-100-lab' exists.
+[Mon, 29 Sep 2025 14:05:33]  WARNING : Role 'injected-gateway-egress-role' not found in namespace '{'namespace': 'lbg-ocp-engineering-100-lab', 'egress': {'id': '001', 'enabled': False, 'replicas': 1, 'limits': {'cpu': '200m', 'memory': '200Mi'}, 'requests': {'cpu': '150m', 'memory': '150Mi'}, 'injected_egress': True}, 'ingress': {'id': '001', 'enabled': False, 'replicas': 1, 'limits': {'cpu': '200m', 'memory': '200Mi'}, 'requests': {'cpu': '150m', 'memory': '150Mi'}, 'injected_ingress': True}, 'labels': {'snow': 'IT.OCP.CLOUD.LAB', 'cmdb_appid': 'AL12345', 'cluster': 'ocp.cloud.lab', 'argo': {'enabled': True, 'managed_by': 'openshift-gitops'}, 'ad_group': {'enabled': True, 'name': 'GG_OCP_CLOUD_LAB_GROUP', 'view': 'GG_OCP_CLOUD_LAB'}, 'portworx': {'enabled': False}}, 'annotations': {'contact': 'aiyaz.khan', 'openshift': {'description': 'Engineering namespace', 'display_name': 'Engineering namespace', 'node_selector': 'node-role.kubernetes.io/app='}}, 'pods': 10, 'limits': {'cpu': 10, 'memory': '12Gi'}, 'requests': {'cpu': 10, 'memory': '12Gi', 'storage': 2}, 'persistentvolumeclaims': 2}'. Moving on !
+
+[Mon, 29 Sep 2025 14:05:33]     INFO : =====================================================================================
+[Mon, 29 Sep 2025 14:05:33]     INFO : Namespace 'lbg-ocp-engineering-100-lab' exists.
+[Mon, 29 Sep 2025 14:05:33]  WARNING : Role 'injected-gateway-ingress-role' not found in namespace '{'namespace': 'lbg-ocp-engineering-100-lab', 'egress': {'id': '001', 'enabled': False, 'replicas': 1, 'limits': {'cpu': '200m', 'memory': '200Mi'}, 'requests': {'cpu': '150m', 'memory': '150Mi'}, 'injected_egress': True}, 'ingress': {'id': '001', 'enabled': False, 'replicas': 1, 'limits': {'cpu': '200m', 'memory': '200Mi'}, 'requests': {'cpu': '150m', 'memory': '150Mi'}, 'injected_ingress': True}, 'labels': {'snow': 'IT.OCP.CLOUD.LAB', 'cmdb_appid': 'AL12345', 'cluster': 'ocp.cloud.lab', 'argo': {'enabled': True, 'managed_by': 'openshift-gitops'}, 'ad_group': {'enabled': True, 'name': 'GG_OCP_CLOUD_LAB_GROUP', 'view': 'GG_OCP_CLOUD_LAB'}, 'portworx': {'enabled': False}}, 'annotations': {'contact': 'aiyaz.khan', 'openshift': {'description': 'Engineering namespace', 'display_name': 'Engineering namespace', 'node_selector': 'node-role.kubernetes.io/app='}}, 'pods': 10, 'limits': {'cpu': 10, 'memory': '12Gi'}, 'requests': {'cpu': 10, 'memory': '12Gi', 'storage': 2}, 'persistentvolumeclaims': 2}'. Moving on !
+
+[Mon, 29 Sep 2025 14:05:33]     INFO : =====================================================================================
+
+[Mon, 29 Sep 2025 14:05:33]     INFO : =====================================================================================
+
+[Mon, 29 Sep 2025 14:05:33]     INFO : =====================================================================================
+
+[Mon, 29 Sep 2025 14:05:33]     INFO : =====================================================================================
+
+[Mon, 29 Sep 2025 14:05:33]     INFO : =====================================================================================
+
+[Mon, 29 Sep 2025 14:05:33]     INFO : =====================================================================================
+
+[Mon, 29 Sep 2025 14:05:33]     INFO : =====================================================================================
+
+[Mon, 29 Sep 2025 14:05:33]     INFO : =====================================================================================
+[Mon, 29 Sep 2025 14:05:33]     INFO : Namespace 'lbg-ocp-bookinfo-200-test' exists.
+[Mon, 29 Sep 2025 14:05:33]  WARNING : Role 'injected-gateway-egress-role' not found in namespace '{'namespace': 'lbg-ocp-bookinfo-200-test', 'egress': {'id': '002', 'enabled': False, 'replicas': 1, 'limits': {'cpu': '200m', 'memory': '200Mi'}, 'requests': {'cpu': '150m', 'memory': '150Mi'}, 'injected_egress': True}, 'ingress': {'id': '002', 'enabled': False, 'replicas': 1, 'limits': {'cpu': '200m', 'memory': '200Mi'}, 'requests': {'cpu': '150m', 'memory': '150Mi'}, 'injected_ingress': True}, 'labels': {'snow': 'IT.OCP.CLOUD.LAB', 'cmdb_appid': 'AL10432', 'cluster': 'ocp.cloud.lab', 'argo': {'enabled': True, 'managed_by': 'openshift-gitops'}, 'ad_group': {'enabled': True, 'name': 'GG_OCP_CLOUD_LAB_GROUP', 'view': 'GG_OCP_CLOUD_LAB'}, 'portworx': {'enabled': False}}, 'annotations': {'contact': 'aiyaz.khan', 'openshift': {'description': 'Engineering namespace', 'display_name': 'Engineering namespace', 'node_selector': 'node-role.kubernetes.io/app='}}, 'pods': 10, 'limits': {'cpu': 10, 'memory': '12Gi'}, 'requests': {'cpu': 10, 'memory': '12Gi', 'storage': 2}, 'persistentvolumeclaims': 2}'. Moving on !
+
+[Mon, 29 Sep 2025 14:05:33]     INFO : =====================================================================================
+[Mon, 29 Sep 2025 14:05:33]     INFO : Namespace 'lbg-ocp-bookinfo-200-test' exists.
+[Mon, 29 Sep 2025 14:05:33]  WARNING : Role 'injected-gateway-ingress-role' not found in namespace '{'namespace': 'lbg-ocp-bookinfo-200-test', 'egress': {'id': '002', 'enabled': False, 'replicas': 1, 'limits': {'cpu': '200m', 'memory': '200Mi'}, 'requests': {'cpu': '150m', 'memory': '150Mi'}, 'injected_egress': True}, 'ingress': {'id': '002', 'enabled': False, 'replicas': 1, 'limits': {'cpu': '200m', 'memory': '200Mi'}, 'requests': {'cpu': '150m', 'memory': '150Mi'}, 'injected_ingress': True}, 'labels': {'snow': 'IT.OCP.CLOUD.LAB', 'cmdb_appid': 'AL10432', 'cluster': 'ocp.cloud.lab', 'argo': {'enabled': True, 'managed_by': 'openshift-gitops'}, 'ad_group': {'enabled': True, 'name': 'GG_OCP_CLOUD_LAB_GROUP', 'view': 'GG_OCP_CLOUD_LAB'}, 'portworx': {'enabled': False}}, 'annotations': {'contact': 'aiyaz.khan', 'openshift': {'description': 'Engineering namespace', 'display_name': 'Engineering namespace', 'node_selector': 'node-role.kubernetes.io/app='}}, 'pods': 10, 'limits': {'cpu': 10, 'memory': '12Gi'}, 'requests': {'cpu': 10, 'memory': '12Gi', 'storage': 2}, 'persistentvolumeclaims': 2}'. Moving on !
+
+[Mon, 29 Sep 2025 14:05:33]     INFO : =====================================================================================
+
+[Mon, 29 Sep 2025 14:05:33]     INFO : =====================================================================================
+
+[Mon, 29 Sep 2025 14:05:33]     INFO : =====================================================================================
+
+[Mon, 29 Sep 2025 14:05:33]     INFO : =====================================================================================
+
+[Mon, 29 Sep 2025 14:05:33]     INFO : =====================================================================================
+
+[Mon, 29 Sep 2025 14:05:33]     INFO : =====================================================================================
+
+[Mon, 29 Sep 2025 14:05:33]     INFO : =====================================================================================
+
+[Mon, 29 Sep 2025 14:05:33]     INFO : =====================================================================================
+[Mon, 29 Sep 2025 14:05:33]     INFO : Namespace 'lbg-ocp-bookinfo-300-prod' exists.
+[Mon, 29 Sep 2025 14:05:33]  WARNING : Role 'injected-gateway-egress-role' not found in namespace '{'namespace': 'lbg-ocp-bookinfo-300-prod', 'egress': {'id': '003', 'enabled': False, 'replicas': 1, 'limits': {'cpu': '200m', 'memory': '200Mi'}, 'requests': {'cpu': '150m', 'memory': '150Mi'}, 'injected_egress': True}, 'ingress': {'id': '003', 'enabled': False, 'replicas': 1, 'limits': {'cpu': '200m', 'memory': '200Mi'}, 'requests': {'cpu': '150m', 'memory': '150Mi'}, 'injected_ingress': True}, 'labels': {'snow': 'IT.OCP.CLOUD.LAB', 'cmdb_appid': 'AL10432', 'cluster': 'ocp.cloud.lab', 'argo': {'enabled': True, 'managed_by': 'openshift-gitops'}, 'ad_group': {'enabled': True, 'name': 'GG_OCP_CLOUD_LAB_GROUP', 'view': 'GG_OCP_CLOUD_LAB'}, 'portworx': {'enabled': False}}, 'annotations': {'contact': 'aiyaz.khan', 'openshift': {'description': 'Engineering namespace', 'display_name': 'Engineering namespace', 'node_selector': 'node-role.kubernetes.io/app='}}, 'pods': 10, 'limits': {'cpu': 10, 'memory': '12Gi'}, 'requests': {'cpu': 10, 'memory': '12Gi', 'storage': 2}, 'persistentvolumeclaims': 2}'. Moving on !
+
+[Mon, 29 Sep 2025 14:05:33]     INFO : =====================================================================================
+[Mon, 29 Sep 2025 14:05:33]     INFO : Namespace 'lbg-ocp-bookinfo-300-prod' exists.
+[Mon, 29 Sep 2025 14:05:33]  WARNING : Role 'injected-gateway-ingress-role' not found in namespace '{'namespace': 'lbg-ocp-bookinfo-300-prod', 'egress': {'id': '003', 'enabled': False, 'replicas': 1, 'limits': {'cpu': '200m', 'memory': '200Mi'}, 'requests': {'cpu': '150m', 'memory': '150Mi'}, 'injected_egress': True}, 'ingress': {'id': '003', 'enabled': False, 'replicas': 1, 'limits': {'cpu': '200m', 'memory': '200Mi'}, 'requests': {'cpu': '150m', 'memory': '150Mi'}, 'injected_ingress': True}, 'labels': {'snow': 'IT.OCP.CLOUD.LAB', 'cmdb_appid': 'AL10432', 'cluster': 'ocp.cloud.lab', 'argo': {'enabled': True, 'managed_by': 'openshift-gitops'}, 'ad_group': {'enabled': True, 'name': 'GG_OCP_CLOUD_LAB_GROUP', 'view': 'GG_OCP_CLOUD_LAB'}, 'portworx': {'enabled': False}}, 'annotations': {'contact': 'aiyaz.khan', 'openshift': {'description': 'Engineering namespace', 'display_name': 'Engineering namespace', 'node_selector': 'node-role.kubernetes.io/app='}}, 'pods': 10, 'limits': {'cpu': 10, 'memory': '12Gi'}, 'requests': {'cpu': 10, 'memory': '12Gi', 'storage': 2}, 'persistentvolumeclaims': 2}'. Moving on !
+
+[Mon, 29 Sep 2025 14:05:33]     INFO : =====================================================================================
+
+[Mon, 29 Sep 2025 14:05:33]     INFO : =====================================================================================
+
+[Mon, 29 Sep 2025 14:05:33]     INFO : =====================================================================================
+
+[Mon, 29 Sep 2025 14:05:33]     INFO : =====================================================================================
+
+[Mon, 29 Sep 2025 14:05:33]     INFO : =====================================================================================
+
+[Mon, 29 Sep 2025 14:05:33]     INFO : =====================================================================================
+
+[Mon, 29 Sep 2025 14:05:33]     INFO : =====================================================================================
+
+[Mon, 29 Sep 2025 14:05:33]     INFO : =====================================================================================
+[Mon, 29 Sep 2025 14:05:33]     INFO : Namespace 'lbg-ocp-injected-gw-400-lab' exists.
+[Mon, 29 Sep 2025 14:05:33]  WARNING : Role 'injected-gateway-egress-role' not found in namespace '{'namespace': 'lbg-ocp-injected-gw-400-lab', 'egress': {'id': '004', 'enabled': False, 'replicas': 1, 'limits': {'cpu': '200m', 'memory': '200Mi'}, 'requests': {'cpu': '150m', 'memory': '150Mi'}, 'injected_egress': True}, 'ingress': {'id': '004', 'enabled': False, 'replicas': 1, 'limits': {'cpu': '200m', 'memory': '200Mi'}, 'requests': {'cpu': '150m', 'memory': '150Mi'}, 'injected_ingress': True}, 'labels': {'snow': 'IT.OCP.CLOUD.LAB', 'cmdb_appid': 'AL10432', 'cluster': 'ocp.cloud.lab', 'argo': {'enabled': True, 'managed_by': 'openshift-gitops'}, 'ad_group': {'enabled': True, 'name': 'GG_OCP_CLOUD_LAB_GROUP', 'view': 'GG_OCP_CLOUD_LAB'}, 'portworx': {'enabled': False}}, 'annotations': {'contact': 'aiyaz.khan', 'openshift': {'description': 'Engineering namespace', 'display_name': 'Engineering namespace', 'node_selector': 'node-role.kubernetes.io/app='}}, 'pods': 10, 'limits': {'cpu': 10, 'memory': '12Gi'}, 'requests': {'cpu': 10, 'memory': '12Gi', 'storage': 2}, 'persistentvolumeclaims': 2}'. Moving on !
+
+[Mon, 29 Sep 2025 14:05:33]     INFO : =====================================================================================
+[Mon, 29 Sep 2025 14:05:33]     INFO : Namespace 'lbg-ocp-injected-gw-400-lab' exists.
+[Mon, 29 Sep 2025 14:05:33]  WARNING : Role 'injected-gateway-ingress-role' not found in namespace '{'namespace': 'lbg-ocp-injected-gw-400-lab', 'egress': {'id': '004', 'enabled': False, 'replicas': 1, 'limits': {'cpu': '200m', 'memory': '200Mi'}, 'requests': {'cpu': '150m', 'memory': '150Mi'}, 'injected_egress': True}, 'ingress': {'id': '004', 'enabled': False, 'replicas': 1, 'limits': {'cpu': '200m', 'memory': '200Mi'}, 'requests': {'cpu': '150m', 'memory': '150Mi'}, 'injected_ingress': True}, 'labels': {'snow': 'IT.OCP.CLOUD.LAB', 'cmdb_appid': 'AL10432', 'cluster': 'ocp.cloud.lab', 'argo': {'enabled': True, 'managed_by': 'openshift-gitops'}, 'ad_group': {'enabled': True, 'name': 'GG_OCP_CLOUD_LAB_GROUP', 'view': 'GG_OCP_CLOUD_LAB'}, 'portworx': {'enabled': False}}, 'annotations': {'contact': 'aiyaz.khan', 'openshift': {'description': 'Engineering namespace', 'display_name': 'Engineering namespace', 'node_selector': 'node-role.kubernetes.io/app='}}, 'pods': 10, 'limits': {'cpu': 10, 'memory': '12Gi'}, 'requests': {'cpu': 10, 'memory': '12Gi', 'storage': 2}, 'persistentvolumeclaims': 2}'. Moving on !
+
+[Mon, 29 Sep 2025 14:05:33]     INFO : =====================================================================================
+
+[Mon, 29 Sep 2025 14:05:33]     INFO : =====================================================================================
+
+[Mon, 29 Sep 2025 14:05:33]     INFO : =====================================================================================
+
+[Mon, 29 Sep 2025 14:05:33]     INFO : =====================================================================================
+
+[Mon, 29 Sep 2025 14:05:33]     INFO : =====================================================================================
+
+[Mon, 29 Sep 2025 14:05:33]     INFO : =====================================================================================
+
+[Mon, 29 Sep 2025 14:05:33]     INFO : =====================================================================================
+
+[Mon, 29 Sep 2025 14:05:34]     INFO : =====================================================================================
+[Mon, 29 Sep 2025 14:05:34]     INFO : Namespace 'lbg-ocp-servicemesh-3-400-lab' exists.
+[Mon, 29 Sep 2025 14:05:34]  WARNING : Role 'injected-gateway-egress-role' not found in namespace '{'namespace': 'lbg-ocp-servicemesh-3-400-lab', 'egress': {'id': '005', 'enabled': False, 'replicas': 1, 'limits': {'cpu': '200m', 'memory': '200Mi'}, 'requests': {'cpu': '150m', 'memory': '150Mi'}, 'injected_egress': True}, 'ingress': {'id': '005', 'enabled': False, 'replicas': 1, 'limits': {'cpu': '200m', 'memory': '200Mi'}, 'requests': {'cpu': '150m', 'memory': '150Mi'}, 'injected_ingress': True}, 'labels': {'snow': 'IT.OCP.CLOUD.LAB', 'cmdb_appid': 'AL10432', 'cluster': 'ocp.cloud.lab', 'argo': {'enabled': True, 'managed_by': 'openshift-gitops'}, 'ad_group': {'enabled': True, 'name': 'GG_OCP_CLOUD_LAB_GROUP', 'view': 'GG_OCP_CLOUD_LAB'}, 'portworx': {'enabled': False}}, 'annotations': {'contact': 'aiyaz.khan', 'openshift': {'description': 'Engineering namespace', 'display_name': 'Engineering namespace', 'node_selector': 'node-role.kubernetes.io/app='}}, 'pods': 10, 'limits': {'cpu': 10, 'memory': '12Gi'}, 'requests': {'cpu': 10, 'memory': '12Gi', 'storage': 2}, 'persistentvolumeclaims': 2}'. Moving on !
+
+[Mon, 29 Sep 2025 14:05:34]     INFO : =====================================================================================
+[Mon, 29 Sep 2025 14:05:34]     INFO : Namespace 'lbg-ocp-servicemesh-3-400-lab' exists.
+[Mon, 29 Sep 2025 14:05:34]  WARNING : Role 'injected-gateway-ingress-role' not found in namespace '{'namespace': 'lbg-ocp-servicemesh-3-400-lab', 'egress': {'id': '005', 'enabled': False, 'replicas': 1, 'limits': {'cpu': '200m', 'memory': '200Mi'}, 'requests': {'cpu': '150m', 'memory': '150Mi'}, 'injected_egress': True}, 'ingress': {'id': '005', 'enabled': False, 'replicas': 1, 'limits': {'cpu': '200m', 'memory': '200Mi'}, 'requests': {'cpu': '150m', 'memory': '150Mi'}, 'injected_ingress': True}, 'labels': {'snow': 'IT.OCP.CLOUD.LAB', 'cmdb_appid': 'AL10432', 'cluster': 'ocp.cloud.lab', 'argo': {'enabled': True, 'managed_by': 'openshift-gitops'}, 'ad_group': {'enabled': True, 'name': 'GG_OCP_CLOUD_LAB_GROUP', 'view': 'GG_OCP_CLOUD_LAB'}, 'portworx': {'enabled': False}}, 'annotations': {'contact': 'aiyaz.khan', 'openshift': {'description': 'Engineering namespace', 'display_name': 'Engineering namespace', 'node_selector': 'node-role.kubernetes.io/app='}}, 'pods': 10, 'limits': {'cpu': 10, 'memory': '12Gi'}, 'requests': {'cpu': 10, 'memory': '12Gi', 'storage': 2}, 'persistentvolumeclaims': 2}'. Moving on !
+
+[Mon, 29 Sep 2025 14:05:34]     INFO : =====================================================================================
+
+[Mon, 29 Sep 2025 14:05:34]     INFO : =====================================================================================
+
+[Mon, 29 Sep 2025 14:05:34]     INFO : =====================================================================================
+
+[Mon, 29 Sep 2025 14:05:34]     INFO : =====================================================================================
+
+[Mon, 29 Sep 2025 14:05:34]     INFO : =====================================================================================
+
+[Mon, 29 Sep 2025 14:05:34]     INFO : =====================================================================================
+
+[Mon, 29 Sep 2025 14:05:34]     INFO : =====================================================================================
+
+[Mon, 29 Sep 2025 14:05:34]     INFO : ============================   Script Execution Completed.   ============================

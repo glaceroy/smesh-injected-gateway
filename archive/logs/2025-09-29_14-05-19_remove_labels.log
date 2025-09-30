@@ -1,0 +1,2 @@
+[Mon, 29 Sep 2025 14:05:20]     INFO : USAGE: python add_helm_adoption_labels.py <input_namespace.yaml> <cluster_values.yaml>
+[Mon, 29 Sep 2025 14:05:20]    ERROR : Please provide full path for the two input values.

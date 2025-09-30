@@ -109,12 +109,11 @@ def delete_silence(auth_token):
 
 def set_silence(auth_token):
 
-    silence = 12
+    silence = 13
 
     os.environ['TZ'] = 'UTC'
-    time.tzset()
 
-    start_time = (datetime.now()).isoformat() + "Z"
+    start_time = (datetime.now() - timedelta(hours=1)).isoformat() + "Z"
     end_time = (datetime.now() + timedelta(hours=silence)).isoformat() + "Z"
 
     alert_host = get_alert_host()

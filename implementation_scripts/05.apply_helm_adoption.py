@@ -93,7 +93,7 @@ def apply_role_label(namespace, role):
         body = {
             "metadata": {
                 "labels": {
-                    "app.kubernetes.io/managed-by": "helm"
+                    "app.kubernetes.io/managed-by": "Helm"
                 },
                 "annotations": {
                     "meta.helm.sh/release-name": "service-mesh-injected-gateway",
@@ -145,7 +145,7 @@ def apply_role_binding_label(namespace, role_binding):
         body = {
             "metadata": {
                 "labels": {
-                    "app.kubernetes.io/managed-by": "helm"
+                    "app.kubernetes.io/managed-by": "Helm"
                 },
                 "annotations": {
                     "meta.helm.sh/release-name": "service-mesh-injected-gateway",
@@ -197,7 +197,7 @@ def apply_sa_label(namespace, service_account):
         body = {
             "metadata": {
                 "labels": {
-                    "app.kubernetes.io/managed-by": "helm"
+                    "app.kubernetes.io/managed-by": "Helm"
                 },
                 "annotations": {
                     "meta.helm.sh/release-name": "service-mesh-injected-gateway",
@@ -230,7 +230,7 @@ def apply_service_label(namespace, service):
         body = {
             "metadata": {
                 "labels": {
-                    "app.kubernetes.io/managed-by": "helm"
+                    "app.kubernetes.io/managed-by": "Helm"
                 },
                 "annotations": {
                     "meta.helm.sh/release-name": "service-mesh-injected-gateway",
