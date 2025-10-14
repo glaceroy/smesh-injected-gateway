@@ -69,6 +69,25 @@ def update_config_file(cluster_values):
     with open(file2, "w") as igw_file:
         yaml.dump(cluster_values, igw_file)
 
+def sanitize_config_file(file_path, spaces_per_tab=2):
+    
+    try:
+        # Read the file 
+        with open(file_path, "r") as file:
+            lines = file.readlines()
+
+        # Replace tabs with spaces
+        corrected_lines = [line.replace('\t', ' ' * spaces_per_tab) for line in lines]
+
+        # Write the corrected lines back to the file
+        with open(file_path, "w") as file:
+            file.writelines(corrected_lines)
+            
+        logger.info(f"Sanitized config file {file_path} by replacing tabs with spaces.")
+    except FileNotFoundError:
+        logger.error(f"File not found: {file_path}")
+    except Exception as e:
+        logger.error(f"Error sanitizing config file {file_path}: {e}")
 
 def main():
 
@@ -87,6 +106,9 @@ def main():
             logger.newline()
             sys.exit(1)
 
+    # Sanitize the cluster values file before updating
+    sanitize_config_file(file2)
+    
     # Read input namespace yaml file
     with open(file1, "r") as ns_stream:
         ns_list = yaml.load(ns_stream)

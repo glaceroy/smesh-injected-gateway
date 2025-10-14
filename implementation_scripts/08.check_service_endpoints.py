@@ -148,6 +148,8 @@ def check_replicas_mismatch(namespace, deployment_name):
         deployment = apps_api.read_namespaced_deployment(deployment_name, namespace)
         desired_replicas = deployment.spec.replicas
         available_replicas = deployment.status.available_replicas
+        if available_replicas is None:
+            available_replicas = 0
 
         if desired_replicas != available_replicas:
             logger.warning(
