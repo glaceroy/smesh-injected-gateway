@@ -71,6 +71,161 @@ def create_logger():
 
     return logger
 
+def check_role_exists(namespace, role):
+
+    # Check if a role exists in the given namespace.
+    try:
+        role =  auth_api.read_namespaced_role(role, namespace)
+        logger.info(f"Role '{role.metadata.name}' exists in namespace '{namespace}'.")
+        return True
+    except kubernetes.client.rest.ApiException as e:
+        if e.status == 404:
+            logger.warning(f"Role '{role}' not found in namespace '{namespace}'. Moving on !")
+        else:
+            logger.error(f"Error checking Role '{role}' in namespace '{namespace}'")
+            logger.error("Error details: ")
+            logger.error(f" - Reason: {e.reason}")
+            logger.error(f" - Status: {e.status}")
+            logger.error(f" - Message: {e.body}")
+        return False
+    
+    
+def apply_role_label(namespace, role):
+
+    # Apply Helm management labels to the specified role in the given namespace.
+    try:
+        body = {
+            "metadata": {
+                "labels": {
+                    "app.kubernetes.io/managed-by": "Helm"
+                },
+                "annotations": {
+                    "meta.helm.sh/release-name": "service-mesh-injected-gateway",
+                    "meta.helm.sh/release-namespace": "istio-system"
+                }
+            }
+        }
+        auth_api.patch_namespaced_role(
+            name=role,
+            namespace=namespace,
+            body=body,
+        )
+        logger.info(
+            f"Labels added successfully to Role '{role}' in namespace '{namespace}'."
+        )
+    except kubernetes.client.rest.ApiException as e:
+        logger.error(
+            f"Error adding labels to Role '{role}' in namespace '{namespace}'"
+        )
+        logger.error("Error details: ")
+        logger.error(f" - Reason: {e.reason}")
+        logger.error(f" - Status: {e.status}")
+        logger.error(f" - Message: {e.body}")
+        
+        
+def check_role_binding_exists(namespace, role_binding):
+    
+    # Check if a role binding exists in the given namespace.
+    try:
+        role_binding = auth_api.read_namespaced_role_binding(role_binding, namespace)
+        logger.info(f"Role Binding '{role_binding.metadata.name}' exists in namespace '{namespace}'.")
+        return True
+    except kubernetes.client.rest.ApiException as e:
+        if e.status == 404:
+            logger.warning(f"Role Binding '{role_binding}' not found in namespace '{namespace}'. Moving on !")
+        else:
+            logger.error(f"Error checking Role Binding '{role_binding}' in namespace '{namespace}'")
+            logger.error("Error details: ")
+            logger.error(f" - Reason: {e.reason}")
+            logger.error(f" - Status: {e.status}")
+            logger.error(f" - Message: {e.body}")
+        return False
+    
+    
+def apply_role_binding_label(namespace, role_binding):
+
+    # Apply Helm management labels to the specified role binding in the given namespace.
+    try:
+        body = {
+            "metadata": {
+                "labels": {
+                    "app.kubernetes.io/managed-by": "Helm"
+                },
+                "annotations": {
+                    "meta.helm.sh/release-name": "service-mesh-injected-gateway",
+                    "meta.helm.sh/release-namespace": "istio-system"
+                }
+            }
+        }
+        auth_api.patch_namespaced_role_binding(
+            name=role_binding,
+            namespace=namespace,
+            body=body,
+        )
+        logger.info(
+            f"Labels added successfully to Role Binding '{role_binding}' in namespace '{namespace}'."
+        )
+    except kubernetes.client.rest.ApiException as e:
+        logger.error(
+            f"Error adding labels to Role Binding '{role_binding}' in namespace '{namespace}'"
+        )
+        logger.error("Error details: ")
+        logger.error(f" - Reason: {e.reason}")
+        logger.error(f" - Status: {e.status}")
+        logger.error(f" - Message: {e.body}")
+
+
+def check_sa_exists(namespace, service_account):
+
+    # Check if a service account exists in the given namespace.
+    try:
+        sa = core_api.read_namespaced_service_account(service_account, namespace)
+        logger.info(f"Service Account '{sa.metadata.name}' exists in namespace '{namespace}'.")
+        return True
+    except kubernetes.client.rest.ApiException as e:
+        if e.status == 404:
+            logger.warning(f"Service Account '{service_account}' not found in namespace '{namespace}'. Moving on !")
+        else:
+            logger.error(f"Error checking Service Account '{service_account}' in namespace '{namespace}'")
+            logger.error("Error details: ")
+            logger.error(f" - Reason: {e.reason}")
+            logger.error(f" - Status: {e.status}")
+            logger.error(f" - Message: {e.body}")
+        return False
+    
+    
+def apply_sa_label(namespace, service_account):
+    
+    # Apply Helm management labels to the specified service account in the given namespace.
+    try:
+        body = {
+            "metadata": {
+                "labels": {
+                    "app.kubernetes.io/managed-by": "Helm"
+                },
+                "annotations": {
+                    "meta.helm.sh/release-name": "service-mesh-injected-gateway",
+                    "meta.helm.sh/release-namespace": "istio-system"
+                }
+            }
+        }
+        core_api.patch_namespaced_service_account(
+            name=service_account,
+            namespace=namespace,
+            body=body,
+        )
+        logger.info(
+            f"Labels added successfully to Service Account '{service_account}' in namespace '{namespace}'."
+        )
+    except kubernetes.client.rest.ApiException as e:
+        logger.error(
+            f"Error adding labels to Service Account '{service_account}' in namespace '{namespace}'"
+        )
+        logger.error("Error details: ")
+        logger.error(f" - Reason: {e.reason}")
+        logger.error(f" - Status: {e.status}")
+        logger.error(f" - Message: {e.body}")
+
 def add_service_label(namespace, service):
     
     # Remove the SMCP operator ownership labels from the specified service in the given namespace.
@@ -204,17 +359,29 @@ def main():
                         if check_namespace(ns):
                             if check_service_exists(ns, f"eg{gw_id}"):
                                 add_service_label(ns, f"eg{gw_id}")
-                            
+                            if check_sa_exists(ns, f"eg{gw_id}-service-account"):
+                                apply_sa_label(ns, f"eg{gw_id}-service-account")
+                            if check_role_exists(ns, f"eg{gw_id}-sds"):
+                                apply_role_label(ns, f"eg{gw_id}-sds")
+                            if check_role_binding_exists(ns, f"eg{gw_id}-sds"):
+                                apply_role_binding_label(ns, f"eg{gw_id}-sds")
+
                     elif key == "ingress":
                         gw_id = cluster_values["project"][ns_index]["ingress"]["id"]
                         if check_namespace(ns):
                             if check_service_exists(ns, f"ig{gw_id}"):
                                 add_service_label(ns, f"ig{gw_id}")
-                                
-                    logger.newline()
-                    logger.info(
-                        "====================================================================================="
-                    )
+                            if check_sa_exists(ns, f"ig{gw_id}-service-account"):
+                                apply_sa_label(ns, f"ig{gw_id}-service-account")
+                            if check_role_exists(ns, f"ig{gw_id}-sds"):
+                                apply_role_label(ns, f"ig{gw_id}-sds")
+                            if check_role_binding_exists(ns, f"ig{gw_id}-sds"):
+                                apply_role_binding_label(ns, f"ig{gw_id}-sds")
+
+        logger.newline()
+        logger.info(
+            "====================================================================================="
+        )
 
     logger.newline()
     logger.info(

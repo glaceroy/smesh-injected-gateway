@@ -17,8 +17,13 @@ from urllib3.exceptions import InsecureRequestWarning
 import requests
 
 import kubernetes.client.rest
-import yaml
 from kubernetes import client
+
+from ruamel.yaml import YAML
+
+yaml = YAML()
+yaml.width = sys.maxsize  # Set width to max size to avoid line breaks in YAML output
+yaml.preserve_quotes = True  # Preserve quotes in YAML output
 
 
 def log_newline(self, how_many_lines=1):
@@ -38,7 +43,7 @@ def create_logger():
     # Create a handler
     sh = logging.StreamHandler(sys.stdout)
     handler = logging.FileHandler(
-        f"./logs/{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}_remove_labels.log",
+        f"./logs/{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}_reapply_smcp_ownership_labels.log",
         mode="w",
         encoding="utf-8",
     )
@@ -86,27 +91,10 @@ def check_role_exists(namespace, role):
         return False
     
     
-def add_role_label(namespace, role, component_type):
+def add_role_label(namespace, role, body):
     
     # Add the SMCP operator ownership labels from the specified role in the given namespace.
     try:
-        body = {
-            "metadata": {
-                    "labels": {
-                        "app.kubernetes.io/component": f"istio-{component_type}",
-                        "app.kubernetes.io/instance": "istio-system",
-                        "app.kubernetes.io/managed-by": "maistra-istio-operator",
-                        "app.kubernetes.io/name": f"istio-{component_type}",
-                        "app.kubernetes.io/part-of": "istio",
-                        "app.kubernetes.io/version": "2.6.9-1-234",
-                        "istio.io/rev": "app-mesh-01",
-                        "maistra-version": "2.6.9",
-                        "maistra.io/owner": "istio-system",
-                        "maistra.io/owner-name": "app-mesh-01",
-                        "release": "istio"
-                    }
-            }
-        }
         auth_api.patch_namespaced_role(
             name=role,
             namespace=namespace,
@@ -144,27 +132,10 @@ def check_role_binding_exists(namespace, role_binding):
         return False
 
 
-def add_role_binding_label(namespace, role_binding, component_type):
+def add_role_binding_label(namespace, role_binding, body):
 
     # Add the SMCP operator ownership labels from the specified role binding in the given namespace.
     try:
-        body = {
-            "metadata": {
-                "labels": {
-                    "app.kubernetes.io/component": f"istio-{component_type}",
-                    "app.kubernetes.io/instance": "istio-system",
-                    "app.kubernetes.io/managed-by": "maistra-istio-operator",
-                    "app.kubernetes.io/name": f"istio-{component_type}",
-                    "app.kubernetes.io/part-of": "istio",
-                    "app.kubernetes.io/version": "2.6.9-1-234",
-                    "istio.io/rev": "app-mesh-01",
-                    "maistra-version": "2.6.9",
-                    "maistra.io/owner": "istio-system",
-                    "maistra.io/owner-name": "app-mesh-01",
-                    "release": "istio"
-                }
-            }
-        }
         auth_api.patch_namespaced_role_binding(
             name=role_binding,
             namespace=namespace,
@@ -202,27 +173,10 @@ def check_sa_exists(namespace, service_account):
         return False
     
     
-def add_sa_label(namespace, service_account, component_type):
+def add_sa_label(namespace, service_account, body):
     
     # Add the SMCP operator ownership labels from the specified service account in the given namespace.
     try:
-        body = {
-            "metadata": {
-                "labels": {
-                    "app.kubernetes.io/component": f"istio-{component_type}",
-                    "app.kubernetes.io/instance": "istio-system",
-                    "app.kubernetes.io/managed-by": "maistra-istio-operator",
-                    "app.kubernetes.io/name": f"istio-{component_type}",
-                    "app.kubernetes.io/part-of": "istio",
-                    "app.kubernetes.io/version": "2.6.9-1-234",
-                    "istio.io/rev": "app-mesh-01",
-                    "maistra-version": "2.6.9",
-                    "maistra.io/owner": "istio-system",
-                    "maistra.io/owner-name": "app-mesh-01",
-                    "release": "istio"
-                }
-            }
-        }
         core_api.patch_namespaced_service_account(
             name=service_account,
             namespace=namespace,
@@ -241,27 +195,10 @@ def add_sa_label(namespace, service_account, component_type):
         logger.error(f" - Message: {e.body}")
 
 
-def add_service_label(namespace, service, component_type):
+def add_service_label(namespace, service, body):
 
     # Add the SMCP operator ownership labels to the specified service in the given namespace.
     try:
-        body = {
-            "metadata": {
-                "labels": {
-                    "app.kubernetes.io/component": f"istio-{component_type}",
-                    "app.kubernetes.io/instance": "istio-system",
-                    "app.kubernetes.io/managed-by": "maistra-istio-operator",
-                    "app.kubernetes.io/name": f"istio-{component_type}",
-                    "app.kubernetes.io/part-of": "istio",
-                    "app.kubernetes.io/version": "2.6.9-1-234",
-                    "istio.io/rev": "app-mesh-01",
-                    "maistra-version": "2.6.9",
-                    "maistra.io/owner": "istio-system",
-                    "maistra.io/owner-name": "app-mesh-01",
-                    "release": "istio"
-                }
-            }
-        }
         core_api.patch_namespaced_service(
             name=service,
             namespace=namespace,
@@ -335,67 +272,108 @@ def check_login():
 
 def main():
 
-    # Read SMCP configuration from the OpenShift cluster.
-    output = subprocess.run(
-        [
-            "oc",
-            "get",
-            "smcp",
-            "app-mesh-01",
-            "-n",
-            "istio-system",
-            "-o",
-            "yaml",
-        ],
-        capture_output=True,
-    )
-    smcp = yaml.safe_load(output.stdout)
+
     
     logger.info(
         "============================   Starting Script Execution.  ============================"
     )
+    
 
-    gateway_list = smcp["spec"]["gateways"]
+    files = [file1, file2]
+    # Check if the required files exist
+    for file in files:
+        if os.path.isfile(file):
+            logger.info(f"The required file {file} exists.")
+        else:
+            logger.error(f"Required input file {file} does not exist. Exiting.. !")
+            logger.newline()
+            sys.exit(1)
 
-    for gateway_type in gateway_list:
-        if gateway_type in ["additionalEgress", "additionalIngress"]:
-            for gateway_id in smcp["spec"]["gateways"][gateway_type]:
-                namespace = smcp["spec"]["gateways"][gateway_type][gateway_id][
-                    "namespace"
-                ]
+    # Read input namespace yaml file
+    with open(file1, "r") as ns_stream:
+        ns_list = yaml.load(ns_stream)
 
-                logger.newline()
-                
-                if gateway_type == "additionalEgress":
-                    component_type = "egress"
-                else:
-                    component_type = "ingress"
-                
-                # Check if namespace exists
-                if check_namespace(namespace):
-                    if check_service_exists(namespace, gateway_id):
-                        add_service_label(namespace, gateway_id, component_type)
-                        if check_sa_exists(namespace, f"{gateway_id}-service-account"):
-                            add_sa_label(namespace, f"{gateway_id}-service-account", component_type)
-                            if check_role_exists(namespace, f"{gateway_id}-sds"):
-                                add_role_label(namespace, f"{gateway_id}-sds", component_type)
-                                if check_role_binding_exists(namespace, f"{gateway_id}-sds"):
-                                    add_role_binding_label(namespace, f"{gateway_id}-sds", component_type)
+    # Read cluster values yaml file
+    for ns in ns_list:
+        with open(file2, "r") as cv_stream:
+            cluster_values = yaml.load(cv_stream)
 
-                                    logger.newline()
-                                    logger.info(
-                                        "====================================================================================="
-                                    )
-                                else:
-                                    logger.newline()
-                                    logger.info(
-                                        "====================================================================================="
-                                    )
+        # Check if the namespace exists in the cluster values
+        if "project" not in cluster_values:
+            logger.error(
+                "The cluster values file does not contain 'project' key. Exiting.. !"
+            )
+            logger.error(
+                "Check the order of input files passed to the script. Exiting.. !"
+            )
+            logger.info(
+                "USAGE: python remove_helm_adoption_labels.py <input_namespace.yaml> <cluster_values.yaml>"
+            )
+            logger.newline()
+            sys.exit(1)
+            
+        logger.info(
+            "====================================================================================="
+        )
+        logger.newline()
+        
+        for ns_index, namespace in enumerate(cluster_values["project"]):
+            if ns == namespace["namespace"]:
+                for index, key in enumerate(namespace):
+                    if key == "egress":
+                        gw_id = cluster_values["project"][ns_index]["egress"]["id"]
+                        if check_namespace(ns):
+                            for resource in [f"eg{gw_id}", f"ig{gw_id}"]:
+                                role_name = f"{resource}-sds"
+                                role_binding_name = f"{resource}-sds"
+                                sa_name = f"{resource}-service-account"
+                                service_name = f"{resource}"
 
-                        logger.newline()
-                        logger.info(
-                            "====================================================================================="
-                        )
+                                if resource.startswith("eg"):
+                                    component_type = "egress"
+                                elif resource.startswith("ig"):
+                                    component_type = "ingress"
+                                    
+                                # Prepare the body with labels to be added
+                                body = {
+                                    "metadata": {
+                                        "labels": {
+                                            "app.kubernetes.io/component": f"istio-{component_type}",
+                                            "app.kubernetes.io/instance": "istio-system",
+                                            "app.kubernetes.io/managed-by": "maistra-istio-operator",
+                                            "app.kubernetes.io/name": f"istio-{component_type}",
+                                            "app.kubernetes.io/part-of": "istio",
+                                            "app.kubernetes.io/version": "2.6.9-1-67",
+                                            "istio.io/rev": "app-mesh-01",
+                                            "maistra-version": "2.6.9",
+                                            "maistra.io/owner": "istio-system",
+                                            "maistra.io/owner-name": "app-mesh-01",
+                                            "release": "istio"
+                                        }
+                                    }
+                                }
+
+                                # Check and remove labels from Role
+                                if check_role_exists(ns, role_name):
+                                    add_role_label(ns, role_name, body)
+
+                                # Check and remove labels from Role Binding
+                                if check_role_binding_exists(ns, role_binding_name):
+                                    add_role_binding_label(ns, role_binding_name, body)
+
+                                # Check and remove labels from Service Account
+                                if check_sa_exists(ns, sa_name):
+                                    add_sa_label(ns, sa_name, body)
+
+                                # Check and remove labels from Service
+                                if check_service_exists(ns, service_name):
+                                    add_service_label(ns, service_name, body)
+
+
+        logger.newline()
+        logger.info(
+            "====================================================================================="
+        )
 
     logger.newline()
     logger.info(
@@ -446,6 +424,18 @@ if __name__ == "__main__":
     core_api = client.CoreV1Api(api_client)
     apps_api = client.AppsV1Api(api_client)
     auth_api = client.RbacAuthorizationV1Api(api_client)
+    
+    # Check if two arguments are provided (not counting the script name)
+    if len(sys.argv) != 3:
+        logger.info(
+            "USAGE: python reapply_smcp_ownership_labels.py <input_namespace.yaml> <cluster_values.yaml>"
+        )
+        logger.error("Please provide full path for the two input values.")
+        sys.exit(1)  # Exit with error status
+
+    # Assign values
+    file1 = sys.argv[1]
+    file2 = sys.argv[2]
 
     # Run the main function
     main()
