@@ -22,6 +22,9 @@ spec:
         istio: ingressgateway
         type: injectedgateway
         sidecar.istio.io/inject: "true" 
+        {{- if $project.labels.cmdb_appid }}
+        cmdb_appid: {{ $project.labels.cmdb_appid }}
+        {{- end }}
     spec:
       serviceAccountName: injected-gateway-ingress-sa
       containers:
